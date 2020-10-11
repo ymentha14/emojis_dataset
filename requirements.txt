@@ -1,0 +1,14 @@
+# local distribution
+setuptools
+-e .
+emoji
+jupyterlab
+pandas
+numpy
+matplotlib
+sklearn
+gensim==3.8.3
+tensorflow==1.14
+pycairo
+mplcairo
+
