@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+data/raw/tweets/
 build/
 develop-eggs/
 dist/
