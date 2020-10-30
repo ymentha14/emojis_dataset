@@ -4,7 +4,6 @@ import tensorflow as tf
 import numpy as np
 import emoji
 
-from utils import build_kb, get_examples_from_kb, generate_embeddings, get_metrics
 import pandas as pd
 import gensim.models as gs
 from pathlib import Path
@@ -25,6 +24,9 @@ def read_form(path):
                   .drop(columns=["Timestamp"]))
     return form_df
 
+def str2vocab(form_df):
+    """ convert string to list of words """
+    return form_df.applymap(lambda x: x.split(","))
 
 def read_meta(path,n_emojis):
     """
