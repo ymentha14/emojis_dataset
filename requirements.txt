@@ -11,4 +11,4 @@ gensim==3.8.3
 tensorflow==1.14
 pycairo
 mplcairo
-
+torch

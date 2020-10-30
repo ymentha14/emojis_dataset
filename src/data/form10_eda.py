@@ -13,7 +13,7 @@ import warnings
 from scipy.stats import hmean
 from scipy import spatial
 warnings.filterwarnings("ignore")
-
+from src.constants import COLOR_PLOT
 
 def read_form(path):
     """
@@ -24,6 +24,36 @@ def read_form(path):
     form_df = (form_df.rename(columns={col_name:col_name.strip() for col_name in form_df.columns})
                   .drop(columns=["Timestamp"]))
     return form_df
+
+
+def read_meta(path,n_emojis):
+    """
+    Read the metadata as returned in the .csv from MTurk
+    """
+    cols_oi = ['WorkTimeInSeconds']
+    meta_df = pd.read_csv(path,index_col='WorkerId')
+    meta_df = meta_df[cols_oi]
+    meta_df.rename(columns={'WorkTimeInSeconds':'worktime'},inplace=True)
+    meta_df['n_emojis'] = n_emojis
+    meta_df['t_per_emoji'] = meta_df['worktime'] / meta_df['n_emojis']
+    return meta_df
+
+def plot_emoji_time(meta_df,ax):
+    """
+    Plot a distribution of the time taken per emoji
+    """
+    meta_df['t_per_emoji'].hist(bins=30,ax=ax)
+    mean_ = meta_df['t_per_emoji'].mean()
+    median_ = meta_df['t_per_emoji'].median()
+    ax.axvline(x=mean_,color='green',label='mean')
+    ax.axvline(x=median_,color='red',label='median')
+    ax.set_title('Time per Emoji Distribution')
+    ax.set_xlabel('[sec]')
+    ax.set_ylabel('[# users]')
+    print(f"Median: {median_:.0f} seconds")
+    print(f"Mean: {mean_:.0f} seconds")
+    ax.legend()
+
 
 def user_representation(formdf,w2v):
     """
@@ -94,7 +124,7 @@ def print_det(df,ax=None,fig=None):
         fig,ax = plt.subplots(1)
     df = df.sort_values('det')
     ax.set_title("Determinant of correlation matrix amongst crowdsourced words vectors")
-    df['det'].plot.bar(ax=ax)
+    df['det'].plot.bar(ax=ax,color=COLOR_PLOT)
     print("Emojis:",end="")
     for i in df.index:
         print(i,end=" ")
@@ -109,7 +139,7 @@ def print_num_words(df,ax=None,fig=None):
     df = df.apply(lambda k:len(set([y for x in k for y in x ])),axis=0)
     ax.set_title("Number of unique words")
     df = df.sort_values()
-    df.plot(kind='bar',ax=ax)
+    df.plot(kind='bar',ax=ax,color=COLOR_PLOT)
 
     print("Emojis:",end="")
     for i in df.index:
@@ -141,7 +171,7 @@ def plot_corr(df,agg_type="mean",ax=None):
         fig,ax = plt.subplots(1)
     df = df.sort_values(f'corr_{agg_type}')
     ax.set_title(f"Correlations between {agg_type} of crowdsourced rep and emojivec rep")
-    df[f'corr_{agg_type}'].plot.bar(ax=ax)
+    df[f'corr_{agg_type}'].plot.bar(ax=ax,color=COLOR_PLOT)
     print("Emojis:",end="")
     for i in df.index:
         print(i,end=" ")
@@ -223,5 +253,5 @@ def plot_best_words_emojis(words_scores_df,em,col='word_corr',ax=None):
     words_scores_df = words_scores_df[words_scores_df['em'] == em]
     words_scores_df = words_scores_df.sort_values(['em',col],ascending=False)
     print(f"Emoji {em}:")
-    words_scores_df.plot.bar(ax=ax,x="word",y="word_corr")
+    words_scores_df.plot.bar(ax=ax,x="word",y="word_corr",color=COLOR_PLOT)
     ax.set_title("Word Correlation between crowdsourced data and emoji")

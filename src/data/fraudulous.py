@@ -3,12 +3,11 @@ from src.constants import emotions_faces,REF_PATH,MAPPING_PATH, E2V_PATH, W2V_PA
 import sys
 sys.path.append("../../emoji2vec_working/")
 from phrase2vec import Phrase2Vec
-from src.data.form_eda import *
+from src.data.form10_eda import *
 import seaborn as sns
 import numpy as np
+from src.constants import COLOR_FRAUD,COLOR_TRUE
 
-COLOR_TRUE = '#549aab'
-COLOR_FRAUD = '#d03161'
 
 def plot_double_hist(user_serie,fraud):
     user_serie = user_serie.astype(int)
@@ -44,10 +43,12 @@ def get_users_duplicate(form_df,ratio=0.9):
     if type(form_df) is list:
         return pd.concat([get_users_duplicate(df) for df in form_df])
     n_cols = form_df.shape[1]
+    # transform the strings in frozen sets
+    form_df = form_df.applymap(lambda x: frozenset(x.split(",")))
     duplicate_mask = form_df.apply(lambda x:len(set(x)) < int(n_cols * ratio),axis=1)
     return duplicate_mask
 
-def dtct_duplicate_answer(form_df,ratio=0.9):
+def dtct_duplicate_answer(form_df,ratio=0.95):
     """detect users giving many times the same answer (up to ratio * the number of answers)"""
     duplicate_mask = get_users_duplicate(form_df,ratio)
     duplicate_users = set(duplicate_mask.index[duplicate_mask].tolist())
