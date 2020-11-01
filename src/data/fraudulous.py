@@ -162,10 +162,11 @@ def find_fraudulous(form_df,filter_funcs):
         [list of str]: list of fraudulent users
     """
     
-    fraudulous_users = set()
+    fraudulous_users = {}
     for filter_func in filter_funcs:
+        func_name = str(filter_func).split()[1]
         new_fraud_users = filter_func(form_df)
-        fraudulous_users.update(new_fraud_users)
+        fraudulous_users[func_name] = new_fraud_users
     return fraudulous_users
 
 def fraud_metrics(users,fraud,fraud_hat):

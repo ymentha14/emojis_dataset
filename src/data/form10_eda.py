@@ -49,7 +49,7 @@ def plot_emoji_time(meta_df,ax):
     median_ = meta_df['t_per_emoji'].median()
     ax.axvline(x=mean_,color='green',label='mean')
     ax.axvline(x=median_,color='red',label='median')
-    ax.set_title('Time per Emoji Distribution')
+    ax.set_title('Time distribution for 10 emojis')
     ax.set_xlabel('[sec]')
     ax.set_ylabel('[# users]')
     print(f"Median: {median_:.0f} seconds")
