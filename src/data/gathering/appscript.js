@@ -3,11 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////// CONSTANTS /////////////////////////////////////////////////////////////////////////////////////////////
 var N_CHUNKS = 5
 
-
-var EMOJIS = ["😀","😃","😄","😁","😆","😅","😂","🤣","☺","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞",
-"🏳️","🏴","🏁","🚩","🏳️","🌈","🏴☠️","🇦🇫","🇦🇽","🇦🇱","🇩🇿","🇦🇸","🇦🇩","🇦🇴","🇦🇮","🇦🇶","🇦🇬","🇦🇷","🇦🇲","🇦🇼","🇦🇺","🇦🇹","🇦🇿","🇧🇸","🇧🇭","🇧🇩","🇧🇧","🇧🇾","🇧🇪","🇧🇿","🇧🇯","🇧🇲","🇧🇹","🇧🇴","🇧🇦","🇧🇼","🇧🇷"]
-
-
+var EMOJIS_CODES = [...Array(50).keys()];
 
 var FORM_DESC = `First things first: please make sure you can properly see the following emojis in your web browser 
 
@@ -116,20 +112,36 @@ function shuffleArray(array) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////// EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
-function create_em_field(em,form){
+function create_em_field(em_code,form){
+  
+  // image insertion
+  var folder = DriveApp.getFolderById("1PxHWVRpuZIDhr7NPvtmf9p2Ux8gXC0n8");
+  var imgs = folder.getFiles();
+  while (imgs.hasNext()) {
+    var img = imgs.next();
+    var name = img.getName();
+    if (name.split(".")[0] == em_code.toString()) {
+      var id = img.getId();
+      form.addImageItem()
+           .setImage(img)
+           .setTitle(em_code.toString());
+      break;
+    }
+  }
+
   // regex validation
   var validation = FormApp.createTextValidation()
   .requireTextMatchesPattern("^[a-z]+,[a-z]+,[a-z]+$")
   .setHelpText('Non valid format! (word1,word2,word3)')
   .build();
-  
+ 
   form.addTextItem()
-  .setTitle(em)
+  .setTitle(em_code.toString())
   .setRequired(true)
   .setValidation(validation);
 }
 
-function createForm(emojis,number) {
+function createForm(emojis_codes,number) {
   // Title and description
   var item = "Test Form "+ number;  
   var form = FormApp.create(item)  
@@ -155,7 +167,7 @@ function createForm(emojis,number) {
   // Chunkize Emoj
   
   // Emojis Fields
-  emojis.forEach(em => create_em_field(em,form))
+  emojis_codes.forEach(em_code => create_em_field(em_code,form))
   
   // Completion text
   form.setConfirmationMessage(CONFIRMATION_MSG)
@@ -168,7 +180,7 @@ function createForm(emojis,number) {
 
 
 function create_forms() {
-  shuffleArray(EMOJIS)
-  var emojis_chunk = chunkify(EMOJIS,N_CHUNKS,true)
+  shuffleArray(EMOJIS_CODES)
+  var emojis_chunk = chunkify(EMOJIS_CODES,N_CHUNKS,true)
   emojis_chunk.forEach( function(chunk,i) {createForm(chunk,i)})
 }
