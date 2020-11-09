@@ -17,33 +17,45 @@ import bz2
 import json
 from IPython.core.debugger import set_trace
 import warnings
+from numpy.random import permutation
 warnings.filterwarnings('ignore')
 sns.set()
 
 
-def read_twitter_data(tweet_path=None,N_LIM=10):
+def compute_twitter_data(save_path,N_LIM=1000000,seed=13):
     """
     Gather randomized subset of the data present at tweets_pritzer_sample.
 
     Args:
+        save_path (str): path to save the generated file to
         N_LIM (int): number of files we take from each day directory
     
     Returns:
         [pd.df]: dataframe with columns 'id','lang', and 'text'
     """
-    if tweet_path is not None:
-        print("loading existing file..")
-        tweet_df = pd.read_csv(tweet_path,index_col=0,nrows=3000000)
-        return tweet_df
+    save_path = Path(save_path)
+    np.random.seed(seed)
+    tweetpaths_path = "../data/external/tweet_paths.pk"
+
+    if Path(tweetpaths_path).exists():
+        print("Loading precomputed paths structure")
+        tweet_paths = pk.load(open(tweetpaths_path,"rb"))
+    else:
+        print("Computing paths structure")
+        main_path = Path("/dlabdata1/gligoric/spritzer/tweets_pritzer_sample/")
+        subpaths = np.random.permutation(list(main_path.iterdir()))
+        # we are only interested in the twitter_stream directories
+        subpaths = [path for path in subpaths if path.stem.startswith("twitter_stream")]
+        tweet_paths = [tweet_path for subpath in subpaths for tweet_path in list(subpath.rglob("*.json.bz2"))]
+
+    tweet_paths = np.random.permutation(tweet_paths)[:N_LIM]
+
     tweet_df = []
-    main_path = Path("/dlabdata1/gligoric/spritzer/tweets_pritzer_sample/")
-    np.random.seed(13)
-    subpaths = np.random.permutation(list(main_path.iterdir()))
-    # we only take the twitter_stream
-    subpaths = [path for path in subpaths if path.stem.startswith("twitter_stream")]
-    tweet_paths = [tweet_path for subpath in subpaths for tweet_path in np.random.permutation(list(subpath.rglob("*.json.bz2")))[:N_LIM]]
-    print(f"Analyzing {len(tweet_paths)} files")
-    for tweet_path in tqdm(tweet_paths):
+    print(f"Analyzing {N_LIM} files")
+    first_pass = True
+    for i,tweet_path in enumerate(tqdm(tweet_paths)):
+
+        # tweeter file reading
         new_tweets = []
         with bz2.open(tweet_path, "rt") as bzinput:
             for line in bzinput: 
@@ -53,12 +65,35 @@ def read_twitter_data(tweet_path=None,N_LIM=10):
                     continue
                 if len(tweet.keys()) < 5 :
                     continue
-                tweet = {key:tweet[key] for key in ['id','lang','text']}
+                tweet = {key:tweet[key] for key in ['id','lang','text'] if tweet['lang'] == 'en'}
                 new_tweets.append(tweet)
         tweet_df += new_tweets
+
+        # RAM saving on the shared machine
+        if i % 100 == 0 and i != 0:
+            if first_pass:
+                mode = 'a'
+                header = False
+                first_pass = False
+            else:
+                mode = 'w'
+                header = True
+            tweet_df = pd.DataFrame(tweet_df)
+            tweet_df.to_csv(save_path,mode=mode,header=header)
+            tweet_df = []
+    
+    # type conversion and saving
     tweet_df = pd.DataFrame(tweet_df)
-    tweet_df.to_csv("/home/ymentha/tweet.csv")
+    tweet_df.to_csv(save_path)
     return tweet_df
+
+def load_or_compute_tweetdf(path):
+    path = Path(path)
+    if path.exists():
+        print("loading existing file..")
+        tweet_df = pd.read_csv(path,index_col=0,nrows=3000000)
+    else:
+        tweet_df = read_twitter_data(tweet_path,10)
 
 def update_emoji_count(dic,text):
     """
@@ -68,13 +103,15 @@ def update_emoji_count(dic,text):
         dic(dict): mapping emojis--> count
         text (str): text to use to update dic
     """
-    for char in text:
-        if char in emoji.UNICODE_EMOJI:
-            dic[char] = dic.get(char,0) + 1
+    for em in extract_emojis(text,True):
+        if em not in emoji.UNICODE_EMOJI:
+            print("EMOJI NOT PRESENT")
+            continue
+        dic[em] = dic.get(em,0) + 1
 
-def get_em_df(path,tweet_df=None):
+def compute_emdf(path,tweet_df):
     """
-    extract the em_df from tweet_df. em_df = mapping from emojis to their counts
+    compute the em_df from tweet_df. em_df = mapping from emojis to their counts
     in tweet_df
 
     Args:
@@ -84,7 +121,26 @@ def get_em_df(path,tweet_df=None):
     Returns:
         [pd.df]: em_df
     """
-    if Path(path).exists() and tweet_df is None:
+    emojis_count = {}
+    for text in tqdm(tweet_df['text']):
+        update_emoji_count(emojis_count,text)
+    em_df = pd.Series(emojis_count).sort_values(ascending=False)
+    em_df = em_df.reset_index().dropna().set_index('index')
+    em_df.to_csv(path)
+    return em_df
+
+def load_or_compute_emdf(path,tweet_df=None):
+    """
+    load or compute the em_df depending if the provided path exists or not
+
+    Args:
+        path (str): path to em_df
+        tweet_df (pd.df): dataframe as returned by read_twitter_data
+    
+    Returns:
+        [pd.df]: em_df
+    """
+    if Path(path).exists():
         return pd.read_csv(path,index_col=0,names=['counts'],header=0)['counts']
     emojis_count = {}
     for text in tqdm(tweet_df['text']):
@@ -93,6 +149,7 @@ def get_em_df(path,tweet_df=None):
     em_df = em_df.reset_index().dropna().set_index('index')
     em_df.to_csv(path)
     return em_df
+
 
 def print_tot_emoji_ratio(em_df):
     """

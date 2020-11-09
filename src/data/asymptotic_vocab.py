@@ -7,12 +7,54 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
+from IPython.core.debugger import set_trace
+from scipy.spatial import distance
+
 
 def get_voc_size(serie):
     """
     return the vocabulary size of the words present in serie
     """
     return len(set([word for words_user in serie for word in words_user ]))
+
+def get_distrib(em_serie,ex_distrib=None):
+    """
+    Return the distribution of words for em_serie.
+    Complete the existing distribution support for comparison compatibility
+    by filling it with 0 for non present words.
+    
+    Args:
+        em_serie (pd.Serie): serie of words
+        
+    """
+    distrib = em_serie.explode().value_counts()
+    distrib /= distrib.sum()
+    distrib = distrib.to_dict()
+
+    if ex_distrib is not None:        
+        assert(np.isclose(sum(ex_distrib.values()),1))
+        dis_set = set(distrib.keys())
+        ex_set = set(ex_distrib.keys())
+        totkeys = dis_set.union(ex_set)
+        distrib = {key:distrib.get(key,0) for key in totkeys}
+        # inplace change for ex_distrib
+        for key in dis_set - ex_set:
+            ex_distrib[key] = 0
+        assert(np.isclose(sum(ex_distrib.values()),1))
+        assert(set(distrib.keys()) == set(ex_distrib.keys()))
+    assert(np.isclose(sum(distrib.values()),1))
+    return distrib
+
+def compute_distance_distribs(distrib1,distrib2=None):
+    """
+    Return the distance between the 2 distributions
+    """
+    if distrib2 is None:
+        return 1
+    keys = distrib1.keys()
+    distrib1 = [distrib1[key] for key in keys]
+    distrib2 = [distrib2[key] for key in keys]
+    return distance.jensenshannon(distrib1,distrib2,2)
 
 def build_trajectory(em_serie):
     """
@@ -24,14 +66,20 @@ def build_trajectory(em_serie):
     Return:
         [dict]: dictionary mapping the size of voc to the number of users used to build this voc
     """
+    
     em_serie = em_serie.sample(frac=1)
 
     # returned dictionary
     ret_dic = {}
+    ex_distrib = None
     for n_user in range(1,em_serie.shape[0]+1):
         sub_serie = em_serie[:n_user]
-        voc_size = get_voc_size(sub_serie)
-        ret_dic[n_user] = voc_size
+        # voc_size = get_voc_size(sub_serie)
+        # ret_dic[n_user] = voc_size
+        distrib = get_distrib(sub_serie,ex_distrib)
+        distance = compute_distance_distribs(distrib,ex_distrib)
+        ret_dic[n_user] = distance
+        ex_distrib = distrib
     return ret_dic
 
 def plot_trajectories(em_serie,ax=None,N_TRAJ = 20):
@@ -51,14 +99,14 @@ def plot_trajectories(em_serie,ax=None,N_TRAJ = 20):
     median_traj = trajectories.median(axis=1)
 
     for col in trajectories.columns:
-        trajectories[col].plot(ax=ax,color='red',alpha=0.2)
-    mean_traj.plot(ax=ax,color='#1261A0')
-    median_traj.plot(ax=ax,color='red')
+        trajectories[col].plot(ax=ax,color='red',alpha=0.2,label='')
+    mean_traj.plot(ax=ax,color='green',label='mean')
+    median_traj.plot(ax=ax,color='#1261A0',label='median')
     # labels
     ax.set_xlabel('# of users')
     ax.set_ylabel('size of vocabulary')
+    ax.legend()
 
-from IPython.core.debugger import set_trace
 def plot_multi_trajectories(form_df):
     """
     Plot the random trajectories as in plot_trajectories for the 9 first emojis of form_df
@@ -70,4 +118,5 @@ def plot_multi_trajectories(form_df):
         plot_trajectories(form_df[col],ax)
     y_lim = max([ax.get_ylim()[1] for ax in axes])
     for ax in axes:
-        ax.set_ylim((0,y_lim))
+        #ax.set_ylim((0,y_lim))
+        ax.set_yscale('log')
