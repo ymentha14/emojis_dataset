@@ -17,26 +17,35 @@ import bz2
 import json
 from IPython.core.debugger import set_trace
 import warnings
+import pickle as pk
 from numpy.random import permutation
+import pdb, traceback, sys
+from src.constants import TWEET_PATHS_PATH,TWEET_PATH
+
+
 warnings.filterwarnings('ignore')
 sns.set()
 
 
-def compute_twitter_data(save_path,N_LIM=1000000,seed=13):
+def filter_access_paths(tweet_paths):
     """
-    Gather randomized subset of the data present at tweets_pritzer_sample.
-
-    Args:
-        save_path (str): path to save the generated file to
-        N_LIM (int): number of files we take from each day directory
-    
-    Returns:
-        [pd.df]: dataframe with columns 'id','lang', and 'text'
+    filter the paths we have rights for
     """
-    save_path = Path(save_path)
-    np.random.seed(seed)
-    tweetpaths_path = "../data/external/tweet_paths.pk"
+    access_paths = []
+    print(f"Length before filtering{len(tweet_paths)}")
+    for tweet_path in tqdm(tweet_paths):
+        try:
+            bz2.open(tweet_path, "rt")
+            access_paths.append(tweet_path)
+        except PermissionError as e:
+            continue
+    print(f"Length after filtering: {len(access_paths)}")
+    return access_paths
 
+def load_or_compute_tweetpaths(tweetpaths_path):
+    """
+    Return a list of the paths we search information in
+    """
     if Path(tweetpaths_path).exists():
         print("Loading precomputed paths structure")
         tweet_paths = pk.load(open(tweetpaths_path,"rb"))
@@ -47,53 +56,76 @@ def compute_twitter_data(save_path,N_LIM=1000000,seed=13):
         # we are only interested in the twitter_stream directories
         subpaths = [path for path in subpaths if path.stem.startswith("twitter_stream")]
         tweet_paths = [tweet_path for subpath in subpaths for tweet_path in list(subpath.rglob("*.json.bz2"))]
+        tweet_paths = filter_access_paths(tweet_paths)
+        pk.dump(tweet_paths,open(tweetpaths_path,"wb"))
+    return tweet_paths
+
+
+def compute_twitter_data(save_path,N_LIM=30000,seed=15):
+    """
+    Gather randomized subset of the data present at tweets_pritzer_sample.
+
+    Args:
+        save_path (str): path to save the generated file to
+        N_LIM (int): number of files we take from each day directory
+    
+    Returns:
+        [pd.df]: dataframe with columns 'id','lang', and 'text'
+    """
+    N_SAVE = 100
+    assert(N_LIM > N_SAVE)
+    save_path = Path(save_path)
+    np.random.seed(seed)
+
+    tweet_paths = load_or_compute_tweetpaths(TWEET_PATHS_PATH)
 
     tweet_paths = np.random.permutation(tweet_paths)[:N_LIM]
 
     tweet_df = []
     print(f"Analyzing {N_LIM} files")
     first_pass = True
+    tweet_paths = [Path('/dlabdata1/gligoric/spritzer/tweets_pritzer_sample/twitter_stream_2019_03_13/13/09/13.json.bz2')] + tweet_paths.tolist()
     for i,tweet_path in enumerate(tqdm(tweet_paths)):
 
         # tweeter file reading
         new_tweets = []
-        with bz2.open(tweet_path, "rt") as bzinput:
-            for line in bzinput: 
-                try:
-                    tweet = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if len(tweet.keys()) < 5 :
-                    continue
-                tweet = {key:tweet[key] for key in ['id','lang','text'] if tweet['lang'] == 'en'}
-                new_tweets.append(tweet)
-        tweet_df += new_tweets
+        try:
+            with bz2.open(tweet_path, "rt") as bzinput:
+                for line in bzinput: 
+                    try:
+                        tweet = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if len(tweet.keys()) < 5 :
+                        continue
+                    tweet = {key:tweet[key] for key in ['id','lang','text'] }
+                    # we only care for english-labelled data
+                    if tweet['lang'] != 'en':
+                        continue
+                    new_tweets.append(tweet)
+            tweet_df += new_tweets
+        except EOFError:
+            print("EOF error ==> continue")
+            continue
 
         # RAM saving on the shared machine
-        if i % 100 == 0 and i != 0:
+        if i % N_SAVE == 0 and i != 0:
             if first_pass:
-                mode = 'a'
-                header = False
-                first_pass = False
-            else:
                 mode = 'w'
                 header = True
+                first_pass = False
+            else:
+                mode = 'a'
+                header = False
             tweet_df = pd.DataFrame(tweet_df)
             tweet_df.to_csv(save_path,mode=mode,header=header)
             tweet_df = []
-    
+        
     # type conversion and saving
     tweet_df = pd.DataFrame(tweet_df)
-    tweet_df.to_csv(save_path)
-    return tweet_df
+    tweet_df.to_csv(save_path,mode='a',header=False)
+    print("Tweet information generation terminated successfully.")
 
-def load_or_compute_tweetdf(path):
-    path = Path(path)
-    if path.exists():
-        print("loading existing file..")
-        tweet_df = pd.read_csv(path,index_col=0,nrows=3000000)
-    else:
-        tweet_df = read_twitter_data(tweet_path,10)
 
 def update_emoji_count(dic,text):
     """
@@ -122,14 +154,14 @@ def compute_emdf(path,tweet_df):
         [pd.df]: em_df
     """
     emojis_count = {}
-    for text in tqdm(tweet_df['text']):
+    for text in tqdm(   ['text']):
         update_emoji_count(emojis_count,text)
     em_df = pd.Series(emojis_count).sort_values(ascending=False)
     em_df = em_df.reset_index().dropna().set_index('index')
     em_df.to_csv(path)
     return em_df
 
-def load_or_compute_emdf(path,tweet_df=None):
+def load_or_compute_emdf(em_path,tweet_path=None):
     """
     load or compute the em_df depending if the provided path exists or not
 
@@ -140,14 +172,17 @@ def load_or_compute_emdf(path,tweet_df=None):
     Returns:
         [pd.df]: em_df
     """
-    if Path(path).exists():
+    if Path(em_path).exists():
         return pd.read_csv(path,index_col=0,names=['counts'],header=0)['counts']
+
     emojis_count = {}
-    for text in tqdm(tweet_df['text']):
-        update_emoji_count(emojis_count,text)
+    reader = pd.read_csv(tweet_path, chunksize=10000)
+    for df in reader:
+        for text in tqdm(tweet_df['text']):
+            update_emoji_count(emojis_count,text)
     em_df = pd.Series(emojis_count).sort_values(ascending=False)
     em_df = em_df.reset_index().dropna().set_index('index')
-    em_df.to_csv(path)
+    em_df.to_csv(em_path)
     return em_df
 
 
@@ -191,3 +226,12 @@ def display_log_hist(em_df,ax=None):
     print(f"Q50:{q50}")
     print(f"Q75:{q75}")
     print(f"Q99:{q99}")
+
+if __name__ == '__main__':
+    try:
+        print("Starting")
+        compute_twitter_data(TWEET_PATH)
+    except:
+        extype, value, tb = sys.exc_info()
+        traceback.print_exc()
+        pdb.post_mortem(tb)

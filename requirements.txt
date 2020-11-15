@@ -11,4 +11,5 @@ tqdm
 seaborn
 gensim==3.8.3
 tensorflow==1.14
+pdbpp
 torch
