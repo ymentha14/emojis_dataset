@@ -104,8 +104,11 @@ def compute_twitter_data(save_path,N_LIM=30000,seed=15):
                         continue
                     new_tweets.append(tweet)
             tweet_df += new_tweets
-        except EOFError:
-            print("EOF error ==> continue")
+        except KeyboardInterrupt:
+            sys.exit()
+            pass
+        except Exception as e:
+            print(e)
             continue
 
         # RAM saving on the shared machine
@@ -173,7 +176,7 @@ def load_or_compute_emdf(em_path,tweet_path=None):
         [pd.df]: em_df
     """
     if Path(em_path).exists():
-        return pd.read_csv(path,index_col=0,names=['counts'],header=0)['counts']
+        return pd.read_csv(em_path,index_col=0,names=['counts'],header=0)['counts']
 
     emojis_count = {}
     reader = pd.read_csv(tweet_path, chunksize=10000)
