@@ -82,16 +82,52 @@ def build_trajectory(em_serie):
         ex_distrib = distrib
     return ret_dic
 
-def plot_trajectories(em_serie,ax=None,N_TRAJ = 20):
+def generate_diff_strings(N_common=0):
+    """
+    Generate a different string at each call
+    """
+    i = 0
+    j = 0
+    while True:
+        yield "w" + str(i)
+        j +=1
+        if j > N_common:
+            i += 1
+
+def compute_random_trajectory(N_users):
+    """
+    Compute the trajectory of a series of N_users with 3 words each
+    which doesn't have any 2 same words
+    """
+    words = []
+    gen = generate_diff_strings()
+    for n in range(N_users):
+        user_words = [word for _, word in zip(range(3),gen)]
+        words.append(user_words)
+    rand_words = pd.Series(words)
+    traj = build_trajectory(rand_words)
+    return traj
+
+def plot_trajectories(em_serie,ax=None,N_TRAJ = 20,rand_norm_traj = False):
     """
     Generate and plot the random vocabulary size trajectories as described in build_trajectory
     
     Args:
-        em_serie (pd.Serie): serie of list of words for one emoji (independant users on each row assumed) 
+        em_serie (pd.Serie): serie of list of words for one emoji (independant users on each row assumed)
+        N_TRAJ (int): the number of trajectories to compute
+        rand_norm_traj (Bool): random trajectory to normalize on
     """
     if ax is None:
         fig,ax = plt.subplots(1)
+
     trajectories = [pd.Series(build_trajectory(em_serie)) for i in range(N_TRAJ)]
+
+    N = em_serie.shape[0]
+    random_traj = pd.Series(compute_random_trajectory(N))
+    if rand_norm_traj:
+        trajectories = [(random_traj - traj) / random_traj for traj in trajectories]
+    else:
+        random_traj.plot(ax=ax,color='blueviolet',label='random_ref')
 
     trajectories = pd.concat(trajectories,axis = 1)
 
@@ -102,12 +138,15 @@ def plot_trajectories(em_serie,ax=None,N_TRAJ = 20):
         trajectories[col].plot(ax=ax,color='red',alpha=0.2,label='')
     mean_traj.plot(ax=ax,color='green',label='mean')
     median_traj.plot(ax=ax,color='#1261A0',label='median')
+
+
+
     # labels
     ax.set_xlabel('# of users')
-    ax.set_ylabel('size of vocabulary')
+    ax.set_ylabel('JS divergence btwn N and N+1')
     ax.legend()
 
-def plot_multi_trajectories(form_df):
+def plot_multi_trajectories(form_df,rand_norm_traj=False,log_scale=False):
     """
     Plot the random trajectories as in plot_trajectories for the 9 first emojis of form_df
     """
@@ -115,8 +154,10 @@ def plot_multi_trajectories(form_df):
     axes = axes.reshape(-1)
     for ax,col in zip(axes,form_df.columns):
         print(col,end="")
-        plot_trajectories(form_df[col],ax)
+        plot_trajectories(form_df[col],ax,rand_norm_traj=rand_norm_traj)
+    
     y_lim = max([ax.get_ylim()[1] for ax in axes])
-    for ax in axes:
-        #ax.set_ylim((0,y_lim))
-        ax.set_yscale('log')
+    if log_scale:
+        for ax in axes:
+            #ax.set_ylim((0,y_lim))
+            ax.set_yscale('log')

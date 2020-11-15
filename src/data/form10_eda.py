@@ -20,8 +20,9 @@ def read_form(path):
     """
     form_df = (pd.read_csv(path)
               .set_index('Worker ID'))
-    form_df = (form_df.rename(columns={col_name:col_name.strip() for col_name in form_df.columns})
-                  .drop(columns=["Timestamp"]))
+    form_df = form_df.rename(columns={col_name:col_name.strip() for col_name in form_df.columns})
+    if "Timestamp" in form_df.columns:
+        form_df.drop(columns=["Timestamp"],inplace=True)
     return form_df
 
 def str2vocab(form_df):
