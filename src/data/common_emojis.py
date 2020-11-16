@@ -6,6 +6,7 @@ from collections import Counter
 import emoji
 import seaborn as sns
 import pandas as pd
+import sys
 import resource
 from tqdm import tqdm
 from IPython.core.debugger import set_trace
@@ -108,7 +109,7 @@ def compute_twitter_data(save_path,N_LIM=30000,seed=15):
             sys.exit()
             pass
         except Exception as e:
-            print(e)
+            print("Exception!",type(e),e)
             continue
 
         # RAM saving on the shared machine
