@@ -1,82 +1,17 @@
 // App script generating various forms from emoji list
 
 ///////////////////////////////////////////////////////////////////////////////////////////// CONSTANTS /////////////////////////////////////////////////////////////////////////////////////////////
-var N_CHUNKS = 3
-
-var EMOJIS_CODES = [...Array(12).keys()];
-var ASYMPT_CODES = [75,287,1318,446,205,240,540,137]
-
-
-var FORM_DESC = `
-⚠️⚠️⚠️
-RANDOM ANSWERING WONT BE REWARDED: SOME OBVIOUS QUESTIONS ONLY HAVE ONE POSSIBLE ANSWER  AND WILL BE CHECKED
-⚠️⚠️⚠️
-
-1. You will be presented a list emojis for each of which you need to provide 3 ̲𝖽̲𝗂̲𝗌̲𝗍̲𝗂̲𝗇̲𝖼̲𝗍̲ and ̲𝖺̲𝗉̲𝗉̲𝗋̲𝗈̲𝗉̲𝗋̲𝗂̲𝖺̲𝗍̲𝖾̲ words to describe the emoji, starting from the most representative one to the least representative one. 
-
-2. If you would use an emoji in many contexts, chose the word describing the context the most used first, then the second etc.
-
-Example:
-Q0: 🤒
-Your answer: "sick,ill,unwell"
-
-• No space between words
-• No capital letters
-   
-The words can be:
-• Adjectives (ex:"green", "desesperate")
-• Verbs (ex:"cry", "shout")
-• Past tense (ex:"worried", "influenced")
-𝐍𝐁: keep the original form of the verb (ex: "cry" and not "crying")
-
-
-3. Two distinct emojis can only have up to 2 words in common, not three.
-Example:     👍 --> "cool, ideal, nice"
-                     👌 --> "cool, ideal, understood"
-
-4. Use a synonym dictionary to get words as precise as possible. Here are some suggestions
-https://www.thesaurus.com/
-https://www.merriam-webster.com/thesaurus/dictionary
-
-
-The fact that certain emojis appear in black and white instead of in color should not affect your opinion, focus on the emotion of the emoji.`
-
-
-var SINGLE_FORM_DESC = `
-⚠️⚠️⚠️
-RANDOM ANSWERING WONT BE REWARDED: SOME OBVIOUS QUESTIONS ONLY HAVE ONE POSSIBLE ANSWER  AND WILL BE CHECKED
-⚠️⚠️⚠️
-
-1. You will be presented a list emojis for each of which you need to provide the most appropriate word. 
-
-Example:
-Q0: 🤒
-Your answer: "sick"
-
-• No capital letters
-   
-The words can be:
-• Adjectives (ex:"green", "desesperate")
-• Verbs (ex:"cry", "shout")
-• Past tense (ex:"worried", "influenced")
-𝐍𝐁: keep the original form of the verb (ex: "cry" and not "crying")
-
-
-4. Use a synonym dictionary to get words as precise as possible. Here are some suggestions
-https://www.thesaurus.com/
-https://www.merriam-webster.com/thesaurus/dictionary
-
-
-The fact that certain emojis appear in black and white instead of in color should not affect your opinion, focus on the emotion of the emoji.`
-
-
+var N_FORMS = 133 //final number of forms
+var N_FORMS_DEBUG = 3 //number of forms to keep for debugging
+var N_EMOJIS = 7;  // number of emojis to keep in debug mode (delete for production)
+var SELECTED_INDEXES_URL = "https://docs.google.com/document/d/1P7q1hgBrlRqpnATcnHZxMrlRuKzxQx0pj3ab4iqexYM/edit"; // id of a gdoc containing the indexes of the selected emojis
+var FORM_DESC_URL = "https://docs.google.com/document/d/1Lw4uUvqNk3zgijdvszpcR7L5FF4eC7AQREIoFHrvsKM/edit"; // id of the gdoc containing the description of the form
 var CONFIRMATION_MSG = `
-Thank you for completing our survey! Here is the completion code:
-
-EMOJI389169
-  `
+🎉🎉Thank you for completing our survey!🎉🎉
+Here is your MTurk completion code. Either copy-paste it or enter the 3 numbers with no space in the required field on the mturk HIT page you come from.
 
 
+`
 ///////////////////////////////////////////////////////////////////////////////////////////// END CONSTANTS /////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////// HELPER FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,32 +59,75 @@ function generate_password(i) {
   var a = i * 324 + 932;
   return a.toString().substr(0,3)
 }
+
+function read_gdoc(url) {  
+  /* read a google doc as a string from its url*/
+  var doc = DocumentApp.openByUrl(url);
+  var datastring = doc.getBody().getText();
+  return datastring
+}
+
+function get_next_form_idx() {
+  folder = DriveApp.getRootFolder()
+  /* determine which form needs to be created according
+  to the ones already generated */
+  var idxes = []
+  var files = folder.getFiles();
+  while (files.hasNext()) {
+    var file = files.next();
+    var name = file.getName();
+    if (name.startsWith("Test Form")){
+      name = name.split(" ")      
+      idx = name[name.length-1]
+      idxes.push(idx)
+    }
+  }
+  if (idxes.length == 0){
+    return 0
+  }
+  var max_idx = Math.max.apply(Math,idxes)
+  return max_idx + 1
+}
+
+function append2file(fileName,content) {
+  var folder = DriveApp.getRootFolder()
+  var fileList = folder.getFilesByName(fileName);
+  if (fileList.hasNext()) {
+    // found matching file - append text
+    var file = fileList.next();
+    var combinedContent = file.getBlob().getDataAsString() + "\n" + content;
+    file.setContent(combinedContent);
+  }
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////// END HELPER FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////// EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
 function create_em_field(em_code,form,singleForm=False){
+  /**
+ * Summary. (use period)
+ * @param {int}    em_code       Index of the emoji.
+ * @param {gform}  form          Form in which writing the emoji field
+ * @param {bool}   singleForm    Whether to allow only for one word in the validation
+ */
+  var img_title = em_code.toString() + ".png"
   
   // image insertion
-  var folder = DriveApp.getFolderById("16sLvtyPygUbgVWSoAI0t0IYAf-tCIbDQ");
-  var imgs = folder.getFiles();
-  while (imgs.hasNext()) {
-    var img = imgs.next();
-    var name = img.getName();
-    if (name.split(".")[0] == em_code.toString()) {
-      var id = img.getId();
-      form.addImageItem()
+  var folder = DriveApp.getFolderById("12a5_CVmcTiEkIR3SS1k3MXDrHH8nJ-iW");
+  var imgs = folder.searchFiles('title = "' + img_title + '"')
+  var img = imgs.next();
+  var check = imgs.hasNext()
+  form.addImageItem()
            .setImage(img)
            .setTitle(em_code.toString());
-      break;
-    }
-  }
 
   // regex validation
   if (singleForm) {
     var pattern = "^[a-z]+$"
-    var helptext = 'Non valid format! "word1" no cap letter'
+    var helptext = 'Non valid format! Only lower-case letters a-z'
     } else{
       var pattern = "^[a-z]+,[a-z]+,[a-z]+$"      
       var helptext = 'Non valid format! "(word1,word2,word3)" no cap letter'
@@ -167,19 +145,28 @@ function create_em_field(em_code,form,singleForm=False){
 }
 
 function createForm(emojis_codes,number,opt_title="",singleForm=false) {
+  /* Create a google form
+  
+  Args:
+  emojis_codes (list of int): list of the indexes of the emojis present in the form
+  number (int): index of the form
+  opt_title (str): optional title to add
+  singleForm (Bool): whether to accept a single word per emoji (3 otherwise)
+  */
+  
   // Title and description
   if (singleForm){
-    var title = "Test Form "+ " single word" +number + opt_title;
-    var desc = SINGLE_FORM_DESC 
+    var title = "Test Form "+ number + opt_title;
     } else {
-      var title = "Test Form "+ number + opt_title;
-      var desc = FORM_DESC
-      }
+      var title = "Test Form "+ " three words " +number + opt_title;
+    }
+  var desc = read_gdoc(FORM_DESC_URL)
+      
   var form = FormApp.create(title)  
   .setTitle(title)
   .setDescription(desc);
   
-  /*
+  
   // Worker ID
   var item = "Worker ID"
   var validation = FormApp.createTextValidation()
@@ -200,47 +187,39 @@ function createForm(emojis_codes,number,opt_title="",singleForm=false) {
   // Emojis Fields
   emojis_codes.forEach(em_code => create_em_field(em_code,form,singleForm))
   
-  // Completion text
-  form.setConfirmationMessage(CONFIRMATION_MSG)
+  // Completion 
+  var password = generate_password(number);
+  form.setConfirmationMessage(CONFIRMATION_MSG + password)
   
   form.setShowLinkToRespondAgain(false)
   
-  */
+  
   var url = form.getPublishedUrl();
   var short_url = form.shortenFormUrl(url)
   short_url = number.toString() + "\t" + short_url
-  // shortenFormUrl(url)
   return short_url;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////// END EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
 
 function create_random_forms() {
-  shuffleArray(EMOJIS_CODES)
-  var emojis_chunk = chunkify(EMOJIS_CODES,N_CHUNKS,true)
-  var urls = emojis_chunk.map(function(chunk,i) {return createForm(chunk,i)})
+  var form_idx = get_next_form_idx();
+  var emojis_codes = eval(read_gdoc(SELECTED_INDEXES_URL))
+  //shuffleArray(emojis_codes)
+  emojis_codes = chunkify(emojis_codes,N_FORMS,true)
+  // we only care for the next N_FORMS_DEBUG forms
+  emojis_codes = emojis_codes.slice(form_idx,form_idx+N_FORMS_DEBUG)
+
+  var urls = emojis_codes.map(function(chunk,i) {return createForm(chunk,i+form_idx,"",true)})
   urls = urls.join("\n");
-  var fileName,newFile;//Declare variable names
-
-  fileName = "Test Doc.txt";// a new file name with date on end
-
-  newFile = DriveApp.createFile(fileName,urls);//Create a new text file in the root folder
   
-}
-
-function create_asymptotic_form() {
-  createForm(ASYMPT_CODES,0," asymptotic pilote")
-}
-
-function create_asymptotic_form_1_word() {
-    createForm(ASYMPT_CODES,0," asymptotic pilote",true)
-    
-}
-
-function createGoogleDriveTextFile() {
-  var content,fileName,newFile;//Declare variable names
-  
-  content = "This is the file Content";
-
-  newFile = DriveApp.createFile(fileName,content);//Create a new text file in the root folder
+  var fileName = "forms_url.txt";// a new file name with date on end
+  if (form_idx == 0){
+    newFile = DriveApp.createFile(fileName,urls);//Create a new text file in the root folder
+  }
+  else {
+    append2file(fileName,urls);
+  }
 };
+
+
