@@ -5,6 +5,7 @@ var N_FORMS = 133 //final number of forms
 var N_FORMS_DEBUG = 2 //number of forms to keep for debugging
 var N_EMOJIS = 7;  // number of emojis to keep in debug mode (delete for production)
 var SELECTED_INDEXES_URL = "https://docs.google.com/document/d/1P7q1hgBrlRqpnATcnHZxMrlRuKzxQx0pj3ab4iqexYM/edit"; // id of a gdoc containing the indexes of the selected emojis
+var HONEX_POTS_INDEXES = [3006,3091,2897,1244,2282,451,2283,2280,613,387,740,428,597,3059,1284,444,2528,2640,2885,1095,2533,828,699,2979,827] // index of the honeypots emojis
 var FORM_DESC_URL = "https://docs.google.com/document/d/1Lw4uUvqNk3zgijdvszpcR7L5FF4eC7AQREIoFHrvsKM/edit"; // id of the gdoc containing the description of the form
 var IDX2URL_FILENAME = "forms_url.txt"
 var CONFIRMATION_MSG = `
@@ -106,6 +107,15 @@ function createorappend2file(formidx,fileName,content) {
   }
 }
 
+function insert_in_middle(array,element) {
+  var n = array.length
+  var middle = Math.floor(n/2)
+  var pre = array.slice(0,middle)
+  var post = array.slice(middle)
+  var tot = pre.concat([element]).concat(post)
+  return tot
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////// END HELPER FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -122,7 +132,7 @@ function create_em_field(em_code,form,singleForm=False){
   var img_title = em_code.toString() + ".png"
 
   // image insertion
-  var folder = DriveApp.getFolderById("12a5_CVmcTiEkIR3SS1k3MXDrHH8nJ-iW");
+  var folder = DriveApp.getFolderById("1uPqVyfp_DkOMEqm7_zRyjpDAHycgpu94");
   var imgs = folder.searchFiles('title = "' + img_title + '"')
   var img = imgs.next();
   var check = imgs.hasNext()
@@ -188,8 +198,10 @@ function createForm(emojis_codes,formidx,opt_title="",singleForm=false) {
   // Subtitle
   form.addSectionHeaderItem().setTitle("Questions")
 
-  // Chunkize Emoj
-
+  // Honeypot 
+  var honey_emoji_idx = HONEX_POTS_INDEXES[formidx % HONEX_POTS_INDEXES.length]
+  emojis_codes =  insert_in_middle(emojis_codes,honey_emoji_idx)
+  
   // Emojis Fields
   emojis_codes.forEach(em_code => create_em_field(em_code,form,singleForm))
 

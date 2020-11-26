@@ -94,3 +94,32 @@ HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")
 PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
 
 ########################################################
+
+
+# Honeypots
+HONEYPOTS = {"☂️":["rain","umbrella"],
+             "⭐":["star"],
+             "☀️":["sun","sunny"],
+             "🥝":["kiwi"],
+             "🥜":["peanut","peanuts"],
+             "🏀":["basket","basketball"],
+             "🍐":["pear"],
+             "🍑":["peach"],
+             "🍒":["cherry"],
+             "🥑":["avocado"],
+             "🥒":["pickle"],
+             "🥓":["bacon"],
+             "🥕":["carrot"],
+             "🍉":["watermelon"],
+             "🍋":["lemon","lime"],
+             "🍌":["banana"],
+             "🍍":["ananas"],
+             "🍎":["apple"],
+             "🍓":["strawberry"],
+             "🍔":["burger"],
+             "🍕":["pizza"],
+             "🍩":["donut","donuts"],
+             "🍪":["cookie","cookies"],
+             "™️":['tm'],
+             "‼️":['surprised']
+            }
