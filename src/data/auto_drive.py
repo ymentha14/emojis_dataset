@@ -8,7 +8,7 @@ import shutil
 
 import pandas as pd
 import pickle as pk
-from src.constants import TOKEN_PATH
+from src.constants import TOKEN_PATH,CREDS_PATH
 
 def get_drive_service():
     """
@@ -87,7 +87,7 @@ def download_drive_txt(forms_url_path,file_id,service):
         shutil.copyfileobj(fh, f, length=131072)
 
 
-def download_all_csv_results(forms_url,result_path,service):
+def download_all_csv_results(results_url,result_path,service):
     """
     Iterate over the forms present in the index and sequentially download
     their respective most recent results
@@ -95,7 +95,8 @@ def download_all_csv_results(forms_url,result_path,service):
     Args:
         index_url (str):
     """
-    ids = forms_url.res_url.apply(lambda x:x.split("/")[-2])
+    results_url = pd.Series(results_url)
+    ids = results_url.apply(lambda x:x.split("/")[-2])
     for idx,drive_id in ids.iteritems():
         path = result_path.joinpath(f"{idx}.csv")
         download_drive_spreadsheet(path,drive_id,service)

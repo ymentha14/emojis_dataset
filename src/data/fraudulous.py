@@ -10,15 +10,15 @@ from src.constants import COLOR_FRAUD,COLOR_TRUE
 
 
 ###################### SINGLE WORD ######################
-def detect_fraud_worker(df):
+def detect_repeat_frauders(form_df,threshold=0.8):
     """
     Detect the fraudulous workers i.e. the one who repeated the same word too many times
     """
-    df = df.copy()
-    columns = [col for col in df.columns if col not in ['Timestamp','Worker ID']]
-    df['vocsize'] = df[columns].apply(lambda x: len(set(x)),axis=1)
-    fraud_workers = df[df['vocsize'] < 0.8 * len(columns)]['Worker ID'].values.tolist()
-    return fraud_workers
+    form_df = form_df.copy()
+    columns = [col for col in form_df.columns if col not in ['Timestamp','Worker ID']]
+    form_df['vocsize'] = form_df[columns].apply(lambda x: len(set(x)),axis=1)
+    fraud_workers = form_df[form_df['vocsize'] < threshold * len(columns)]['Worker ID'].values.tolist()
+    return set(fraud_workers)
 
 def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
     """
@@ -37,7 +37,7 @@ def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
         corr_words = honeypots[em]
         form_df[em] = form_df[em].apply(lambda word: min([Levenshtein.distance(word,corr_word) for corr_word in corr_words]) > dist_lshtein)
     frauder_list = form_df[form_df.any(axis=1)].index.tolist()
-    return frauder_list
+    return set(frauder_list)
 #########################################################
 
 def plot_double_hist(user_serie,fraud):

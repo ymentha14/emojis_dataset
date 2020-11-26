@@ -87,5 +87,8 @@ target/
 *.swp
 *.swo
 
+# bash
+*.sh
+
 # Mypy cache
 .mypy_cache/

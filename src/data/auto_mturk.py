@@ -11,12 +11,16 @@ import boto3
 import pandas as pd
 import pytz
 import xmltodict
+from time import sleep
 
-from src.constants import (AWS_KEYS_PATH, CREDS_PATH, URL_INDEX_PATH,HIT2FORM_PATH)
-from src.data.auto_drive import get_drive_service, download_drive_txt, download_drive_spreadsheet
+from src.constants import (AWS_KEYS_PATH, CREDS_PATH, URL_INDEX_PATH,HIT2FORM_PATH,FORMS_RESULTS_DIR,HONEYPOTS)
+from src.data.auto_drive import get_drive_service, download_drive_txt, download_drive_spreadsheet,download_all_csv_results
+from src.data.fraudulous import detect_repeat_frauders,detect_honey_frauders
 
 from src.utils import generate_password, read_access_keys
 from pathlib import Path
+from IPython.display import clear_output
+
 utc=pytz.UTC
 
 def create_mturk_client(aws_access_key_id,aws_secret_access_key,production=False):
@@ -92,6 +96,76 @@ def monitor_worker_tags(client,qualification_type_id='3OR1BBO28PIVPWZMRDTWE8U6OZ
             SendNotification=False
         )
 
+def get_answer(answer):
+        xml_doc = xmltodict.parse(answer)
+        return xml_doc['QuestionFormAnswers']['Answer']['FreeText']
+
+class Watcher():
+    """
+    Class to monitor the workers who complete more than a defined threshold
+    of our tasks ==> tag them to prevent them from keeping answering
+    """
+    def __init__(self,form_results_path,
+                    url_results,
+                    drive_service,
+                    threshold=2,
+                    production=False):
+        self.production = production
+        # retrieval of the access keys
+        aws_access_key_id,aws_secret_access_key = read_access_keys(AWS_KEYS_PATH)
+        # creation of an self.client client
+        self.client = create_mturk_client(aws_access_key_id,aws_secret_access_key,production)
+        self.threshold = threshold
+        self.form_results_path = form_results_path
+        self.url_results = url_results
+        self.drive_service = drive_service
+
+    def get_workers2tag(self):
+        download_all_csv_results(self.url_results,
+                                self.form_results_path,
+                                self.drive_service)
+        meta_df = []
+        for form_path in self.form_results_path.iterdir():
+            df = pd.read_csv(form_path,usecols=['Worker ID'])
+            meta_df.append(df)
+        meta_df = pd.concat(meta_df,axis=0)
+        # number of different
+        forms_count = meta_df['Worker ID'].value_counts()
+        forms_count = forms_count[forms_count > self.threshold]
+        return set(forms_count.index.tolist())
+
+    def get_tagged_workers(self,qualification_type_id='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
+        # search for workers already tagged
+        exworkers = set()
+        qualifs = self.client.list_workers_with_qualification_type(QualificationTypeId=qualification_type_id,)
+        for qualif in qualifs['Qualifications']:
+            if qualif['QualificationTypeId'] == qualification_type_id:
+                exworkers.add(qualif['WorkerId'])
+        return exworkers
+
+    def monitor(self,qualification_type_id='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
+        # search for workers already tagged
+        i = 0
+        while True:
+            print(f"{i} th iteration")
+            # information comes from google drive
+            tagged_workers = self.get_tagged_workers()
+            workers2tag = self.get_workers2tag()
+            # remove the workers already tagged
+            workers2tag = workers2tag - tagged_workers
+            for workerid in workers2tag:
+                print(f"Tagging worker {workerid}")
+                # TODO: do a try except to catch a wrongly typed workerid
+                self.client.associate_qualification_with_worker(
+                    QualificationTypeId=qualification_type_id,
+                    WorkerId=workerid,
+                    IntegerValue=1,
+                    SendNotification=False
+                )
+            clear_output(wait=True)
+            i+=1
+            sleep(5)
+
 class Turker():
     def __init__(self,hitlayout,
                     MaxAssignments,
@@ -166,7 +240,7 @@ class Turker():
         if worker_results['NumResults'] > 0:
             df = []
             for assignment in worker_results['Assignments']:
-                answer = self.__get_answer(assignment['Answer'])
+                answer = get_answer(assignment['Answer'])
                 password = generate_password(self.hit2form[hit_id])
                 df.append({'WorkerId':assignment['WorkerId'],
                            'HITId':hit_id,
@@ -190,47 +264,78 @@ class Turker():
         df = pd.concat(df,axis=0)
         return df
 
-    def __get_answer(self,answer):
-        xml_doc = xmltodict.parse(answer)
-        return xml_doc['QuestionFormAnswers']['Answer']['FreeText']
-
-
-    def __approve_all_assignments(self,hit_id,correct_hits_exclusively=False,force=False):
+    def __approve_all_assignments(self,hit_id):
 
         """
 
         Args:
             correct_hits (Bool): whether to correct correct hits exclusively
         """
-        if not force:
-            form_idx = self.hit2form[hit_id]
-            password = generate_password(form_idx)
         assignments = self.client.list_assignments_for_hit(HITId=hit_id,AssignmentStatuses=['Submitted'])
         assignments = assignments['Assignments']
         for assignment in assignments:
             ass_id = assignment['AssignmentId']
-            if correct_hits_exclusively:
-                answer = self.__get_answer(assignment['Answer'])
-                if answer == password:
-                    print(f"Approving assignment {ass_id}")
-                    self.client.approve_assignment(AssignmentId=ass_id)
-                else:
-                    print(f"Rejecting assignment {ass_id}: given answer: {answer} correct password: {password}")
-                    self.client.reject_assignment(AssignmentId=ass_id,
-                                                  RequesterFeedback='Invalid confirmation key')
+            print(f"Approving assignment {ass_id}")
+            self.client.approve_assignment(AssignmentId=ass_id)
+
+    def approve_correct_assignments(self,hit_id):
+
+        """
+        Args:
+            correct_hits (Bool): whether to correct correct hits exclusively
+        """
+        form_idx = self.hit2form[hit_id]
+        form_path = FORMS_RESULTS_DIR.joinpath(f"{form_idx}.csv")
+        form_df = pd.read_csv(form_path)
+
+        assignments = self.client.list_assignments_for_hit(HITId=hit_id,AssignmentStatuses=['Submitted'])
+        assignments = assignments['Assignments']
+
+        # workers = set([assignment['WorkerID'] for assignment in assignments])
+
+        password_frauders = self.detect_password_frauders(assignments=assignments,
+                                                            password = generate_password(form_idx))
+        honey_frauders = detect_honey_frauders(form_df,HONEYPOTS)
+        repeat_frauders = detect_repeat_frauders(form_df)
+        frauders = password_frauders.union(honey_frauders).union(repeat_frauders)
+
+        for assignment in assignments:
+            ass_id = assignment['AssignmentId']
+            worker_id = assignment['WorkerID']
+            if worker_id in frauders:
+                RequesterFeedback = ""
+                if worker_id in password_frauders:
+                    RequesterFeedback += "Invalid confirmation key.\n"
+
+                if worker_id in honey_frauders:
+                    RequesterFeedback += "Non valid obvious emoji answer.\n"
+
+                if worker_id in repeat_frauders:
+                    RequesterFeedback += "Too many times the same word.\n"
+                self.client.reject_assignment(AssignmentId=ass_id,
+                                                RequesterFeedback=RequesterFeedback)
             else:
                 print(f"Approving assignment {ass_id}")
                 self.client.approve_assignment(AssignmentId=ass_id)
 
+    def detect_password_frauders(self,assignments,password):
+        password_frauders = set()
+        for assignment in assignments:
+            worker_id = assignment['WorkerID']
+            answer = get_answer(assignment['Answer'])
+            if answer != password:
+                password_frauders.update(worker_id)
+        return password_frauders
+
     def approve_all_hits(self):
         hits = self.client.list_reviewable_hits()['HITs']
         for hit in hits:
-            self.__approve_all_assignments(hit['HITId'],force=True)
+            self.__approve_all_assignments(hit['HITId'])
 
     def approve_correct_hits(self):
         hits = self.client.list_reviewable_hits()['HITs']
         for hit in hits:
-            self.__approve_all_assignments(hit['HITId'],correct_hits_exclusively=True)
+            self.approve_correct_assignments(hit['HITId'])
 
     def delete_all_hits(self):
         hits = self.client.list_hits()['HITs']

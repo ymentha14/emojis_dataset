@@ -96,6 +96,11 @@ PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
 ########################################################
 
 
+
+
+# AutoMTurk
+NMB_FORMS_THRESHOLD = 2
+
 # Honeypots
 HONEYPOTS = {"☂️":["rain","umbrella"],
              "⭐":["star"],
