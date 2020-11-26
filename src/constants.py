@@ -41,6 +41,8 @@ man_woman = ["🧑","👩","👨"]
 em_letters = ['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '🇮', '🇯', '🇰',
               '🇱', '🇲', '🇳', '🇴', '🇵', '🇶', '🇷', '🇸', '🇹', '🇺', '🇻',
               '🇼', '🇽', '🇾', '🇿']
+em_numbers = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣",
+              "8⃣","5⃣","4⃣","9⃣","1⃣","7⃣","6⃣","3⃣","2⃣","0⃣"]
 
 flags = ["🇦🇨","🇦🇩","🇦🇪","🇦🇫","🇦🇬","🇦🇮","🇦🇱","🇦🇲","🇦🇴","🇦🇶","🇦🇷","🇦🇸","🇦🇹",
 "🇦🇺","🇦🇼","🇦🇽","🇦🇿","🇧🇦","🇧🇧","🇧🇩","🇧🇪","🇧🇫","🇧🇬","🇧🇭","🇧🇮","🇧🇯","🇧🇱","🇧🇲",
@@ -72,6 +74,23 @@ MAPPING_PATH = str(REF_PATH.joinpath('emoji_mapping.p'))
 E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
 W2V_PATH = str(REF_PATH.joinpath('data/word2vec/GoogleNews-vectors-negative300.bin'))
 DATA_PATH = str(REF_PATH.joinpath("data/raw_training_data/emoji_joined.txt"))
-TWEET_PATH = "/home/ymentha/emojivec/data/raw/tweets/big_tweet.csv"
-TWEET_PATHS_PATH = "/home/ymentha/emojivec/data/external/tweet_paths.pk"
+
+REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emojivec")
+TWEET_PATH = REPO_PATH.joinpath("data/raw/tweets/big_tweet.csv")
+TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
+
+
+# Credentials Directory
+CREDS_PATH = REPO_PATH.joinpath("creds")
+AWS_KEYS_PATH = CREDS_PATH.joinpath("aws.txt")  # keys for AWS
+TOKEN_PATH = CREDS_PATH.joinpath("token.pk")  # token for drive API
+
+# path to the downloaded urls form
+URL_INDEX_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/url_index.txt")
+FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_results/")
+HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")
+
+# Em2Png
+PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
+
 ########################################################

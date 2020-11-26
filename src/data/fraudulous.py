@@ -9,6 +9,18 @@ import numpy as np
 from src.constants import COLOR_FRAUD,COLOR_TRUE
 
 
+###################### SINGLE WORD ######################
+def detect_fraud_worker(df):
+    """
+    Detect the fraudulous workers i.e. the one who repeated the same word too many times
+    """
+    df = df.copy()
+    columns = [col for col in df.columns if col not in ['Timestamp','Worker ID']]
+    df['vocsize'] = df[columns].apply(lambda x: len(set(x)),axis=1)
+    fraud_workers = df[df['vocsize'] < 0.8 * len(columns)]['Worker ID'].values.tolist()
+    return fraud_workers
+#########################################################
+
 def plot_double_hist(user_serie,fraud):
     user_serie = user_serie.astype(int)
     user_serie_true = user_serie[~user_serie.index.isin(fraud)]
@@ -58,22 +70,22 @@ def dtct_duplicate_answer(form_df,ratio=0.95):
 def compute_voc_size(form_df):
     """
     Compute the vocabulary size for each user
-    
+
     Args:
         form_df(pd.DataFrame): formular df
-    
+
     Return:
         [pd.Series]: series associating the voc size to each user
     """
     if type(form_df) is list:
         return pd.concat([compute_voc_size(df) for df in form_df])
-    return form_df.apply(lambda x:len(set("".join(x).split(","))),axis=1)   
+    return form_df.apply(lambda x:len(set("".join(x).split(","))),axis=1)
 
 def plot_voc(tot_voc,fraud):
     """
     Plot overlapping histograms of vocabulary size for fraudulent
     and non fraudulent users
-    
+
     Args:
         tot_voc (pd.Series): serie associating a voc size to each user
         fraud (set): set of fraudulent users
@@ -104,7 +116,7 @@ def get_vec_error(form_df,w2v,e2v,ref="mean",loss="l1"):
     """
     cols = [col for col in form_df.columns if col in e2v.vocab]
     form_df = form_df[cols]
-    vec_error = form_df.applymap(lambda x: np.mean([w2v.get_vector(word) 
+    vec_error = form_df.applymap(lambda x: np.mean([w2v.get_vector(word)
                                          for word in x.split(",") if word in w2v.vocab],
                                         axis=0)
                      )
@@ -153,15 +165,15 @@ def gather_users(*args):
 def find_fraudulous(form_df,filter_funcs):
     """
     Find the fraudulous users in form_df using each of the filter_functions
-    
+
     Args:
         form_df (pd.Df): formular to filter
         filter_funcs(func): function returning a list of fraudulous user from a df
-    
+
     Return:
         [list of str]: list of fraudulent users
     """
-    
+
     fraudulous_users = {}
     for filter_func in filter_funcs:
         func_name = str(filter_func).split()[1]
