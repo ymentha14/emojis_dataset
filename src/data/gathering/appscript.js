@@ -2,10 +2,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////// CONSTANTS /////////////////////////////////////////////////////////////////////////////////////////////
 var N_FORMS = 133 //final number of forms
-var N_FORMS_DEBUG = 3 //number of forms to keep for debugging
+var N_FORMS_DEBUG = 2 //number of forms to keep for debugging
 var N_EMOJIS = 7;  // number of emojis to keep in debug mode (delete for production)
 var SELECTED_INDEXES_URL = "https://docs.google.com/document/d/1P7q1hgBrlRqpnATcnHZxMrlRuKzxQx0pj3ab4iqexYM/edit"; // id of a gdoc containing the indexes of the selected emojis
 var FORM_DESC_URL = "https://docs.google.com/document/d/1Lw4uUvqNk3zgijdvszpcR7L5FF4eC7AQREIoFHrvsKM/edit"; // id of the gdoc containing the description of the form
+var IDX2URL_FILENAME = "forms_url.txt"
 var CONFIRMATION_MSG = `
 🎉🎉Thank you for completing our survey!🎉🎉
 Here is your MTurk completion code. Either copy-paste it or enter the 3 numbers with no space in the required field on the mturk HIT page you come from.
@@ -60,7 +61,7 @@ function generate_password(i) {
   return a.toString().substr(0,3)
 }
 
-function read_gdoc(url) {  
+function read_gdoc(url) {
   /* read a google doc as a string from its url*/
   var doc = DocumentApp.openByUrl(url);
   var datastring = doc.getBody().getText();
@@ -77,7 +78,7 @@ function get_next_form_idx() {
     var file = files.next();
     var name = file.getName();
     if (name.startsWith("Test Form")){
-      name = name.split(" ")      
+      name = name.split(" ")
       idx = name[name.length-1]
       idxes.push(idx)
     }
@@ -89,14 +90,19 @@ function get_next_form_idx() {
   return max_idx + 1
 }
 
-function append2file(fileName,content) {
-  var folder = DriveApp.getRootFolder()
-  var fileList = folder.getFilesByName(fileName);
-  if (fileList.hasNext()) {
-    // found matching file - append text
-    var file = fileList.next();
-    var combinedContent = file.getBlob().getDataAsString() + "\n" + content;
-    file.setContent(combinedContent);
+function createorappend2file(formidx,fileName,content) {
+  if (formidx == 0){
+    newFile = DriveApp.createFile(fileName,content);//Create a new text file in the root folder
+  }
+  else {
+    var folder = DriveApp.getRootFolder()
+    var fileList = folder.getFilesByName(fileName);
+    if (fileList.hasNext()) {
+      // found matching file - append text
+      var file = fileList.next();
+      var combinedContent = file.getBlob().getDataAsString() + "\n" + content;
+      file.setContent(combinedContent);
+    }
   }
 }
 
@@ -114,7 +120,7 @@ function create_em_field(em_code,form,singleForm=False){
  * @param {bool}   singleForm    Whether to allow only for one word in the validation
  */
   var img_title = em_code.toString() + ".png"
-  
+
   // image insertion
   var folder = DriveApp.getFolderById("12a5_CVmcTiEkIR3SS1k3MXDrHH8nJ-iW");
   var imgs = folder.searchFiles('title = "' + img_title + '"')
@@ -129,44 +135,44 @@ function create_em_field(em_code,form,singleForm=False){
     var pattern = "^[a-z]+$"
     var helptext = 'Non valid format! Only lower-case letters a-z'
     } else{
-      var pattern = "^[a-z]+,[a-z]+,[a-z]+$"      
+      var pattern = "^[a-z]+,[a-z]+,[a-z]+$"
       var helptext = 'Non valid format! "(word1,word2,word3)" no cap letter'
       }
-  
+
   var validation = FormApp.createTextValidation()
   .requireTextMatchesPattern(pattern)
   .setHelpText(helptext)
   .build();
- 
+
   form.addTextItem()
   .setTitle(em_code.toString())
   .setRequired(true)
   .setValidation(validation);
 }
 
-function createForm(emojis_codes,number,opt_title="",singleForm=false) {
+function createForm(emojis_codes,formidx,opt_title="",singleForm=false) {
   /* Create a google form
-  
+
   Args:
   emojis_codes (list of int): list of the indexes of the emojis present in the form
   number (int): index of the form
   opt_title (str): optional title to add
   singleForm (Bool): whether to accept a single word per emoji (3 otherwise)
   */
-  
+
   // Title and description
   if (singleForm){
-    var title = "Test Form "+ number + opt_title;
+    var title = "Test Form "+ formidx + opt_title;
     } else {
-      var title = "Test Form "+ " three words " +number + opt_title;
+      var title = "Test Form "+ " three words " +formidx + opt_title;
     }
   var desc = read_gdoc(FORM_DESC_URL)
-      
-  var form = FormApp.create(title)  
+
+  var form = FormApp.create(title)
   .setTitle(title)
   .setDescription(desc);
-  
-  
+
+
   // Worker ID
   var item = "Worker ID"
   var validation = FormApp.createTextValidation()
@@ -178,48 +184,53 @@ function createForm(emojis_codes,number,opt_title="",singleForm=false) {
   .setTitle(item)
   .setRequired(true)
   .setValidation(validation);
-  
+
   // Subtitle
   form.addSectionHeaderItem().setTitle("Questions")
-  
+
   // Chunkize Emoj
-  
+
   // Emojis Fields
   emojis_codes.forEach(em_code => create_em_field(em_code,form,singleForm))
-  
-  // Completion 
-  var password = generate_password(number);
+
+  // Completion
+  var password = generate_password(formidx);
   form.setConfirmationMessage(CONFIRMATION_MSG + password)
-  
+
   form.setShowLinkToRespondAgain(false)
-  
-  
+
+  // Update the form's response destination
+  var ss = SpreadsheetApp.create('form_result_'+formidx.toString());
+  form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId())
+  var res_url = ss.getUrl();
+
+
   var url = form.getPublishedUrl();
   var short_url = form.shortenFormUrl(url)
-  short_url = number.toString() + "\t" + short_url
-  return short_url;
+  short_url = formidx.toString() + "," + short_url + "," + res_url
+  createorappend2file(formidx,IDX2URL_FILENAME,short_url)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////// END EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
 
 function create_random_forms() {
-  var form_idx = get_next_form_idx();
+  var next_form_idx = get_next_form_idx();
   var emojis_codes = eval(read_gdoc(SELECTED_INDEXES_URL))
   //shuffleArray(emojis_codes)
   emojis_codes = chunkify(emojis_codes,N_FORMS,true)
   // we only care for the next N_FORMS_DEBUG forms
-  emojis_codes = emojis_codes.slice(form_idx,form_idx+N_FORMS_DEBUG)
+  emojis_codes = emojis_codes.slice(next_form_idx,next_form_idx+N_FORMS_DEBUG)
 
-  var urls = emojis_codes.map(function(chunk,i) {return createForm(chunk,i+form_idx,"",true)})
-  urls = urls.join("\n");
-  
-  var fileName = "forms_url.txt";// a new file name with date on end
-  if (form_idx == 0){
-    newFile = DriveApp.createFile(fileName,urls);//Create a new text file in the root folder
-  }
-  else {
-    append2file(fileName,urls);
-  }
+  emojis_codes.map(function(chunk,i) {return createForm(chunk,i+next_form_idx,"",true)})
+
 };
 
-
+function create_single_form() {
+  var form_idx = 4
+  var emojis_codes = eval(read_gdoc(SELECTED_INDEXES_URL))
+  //shuffleArray(emojis_codes)
+  emojis_codes = chunkify(emojis_codes,N_FORMS,true)
+  // we only care for the next N_FORMS_DEBUG forms
+  emojis_codes = emojis_codes.slice(form_idx,form_idx+1)
+  emojis_codes.map(function(chunk,i) {return createForm(chunk,i+next_form_idx,"",true)})
+};
