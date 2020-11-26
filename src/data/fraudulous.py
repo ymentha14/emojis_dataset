@@ -19,6 +19,25 @@ def detect_fraud_worker(df):
     df['vocsize'] = df[columns].apply(lambda x: len(set(x)),axis=1)
     fraud_workers = df[df['vocsize'] < 0.8 * len(columns)]['Worker ID'].values.tolist()
     return fraud_workers
+
+def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
+    """
+    Returns the worker_ids of the workers who did not manage to find the honeypots
+
+    Args:
+        form_df (pd.df): as saved by download_all_csv_results
+        dist_lshteing (int): distance tolerated to accept a honeypot
+    """
+    assert(form_df['Worker ID'].is_unique)
+    form_df = form_df.set_index('Worker ID').copy()
+    honey_columns = [em for em in form_df.columns if em in honeypots.keys()]
+    form_df = form_df[honey_columns]
+    assert(form_df.shape[1] > 0)
+    for em in honey_columns:
+        corr_words = honeypots[em]
+        form_df[em] = form_df[em].apply(lambda word: min([Levenshtein.distance(word,corr_word) for corr_word in corr_words]) > dist_lshtein)
+    frauder_list = form_df[form_df.any(axis=1)].index.tolist()
+    return frauder_list
 #########################################################
 
 def plot_double_hist(user_serie,fraud):
