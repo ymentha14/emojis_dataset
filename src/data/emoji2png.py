@@ -10,10 +10,12 @@ import pickle as pk
 import time
 from pathlib import Path
 
-def print_and_capture(bbox,test=False,missing_emojis=None):
+def print_and_capture(x,y,width,height,test=False,missing_emojis=None):
     """
     Allows to recreate the images from the emoji
     """
+    bbox = (x,y,x+width,y+height)
+
     output_folder = PNG_PATH
     if missing_emojis is not None:
         emojis_dic = {key:val for key,val in emoji.EMOJI_UNICODE.items() if key.strip(":") in missing_emojis}
