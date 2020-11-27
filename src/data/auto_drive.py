@@ -38,7 +38,7 @@ def get_drive_service():
     service = build('drive', 'v3', credentials=creds)
     return service
 
-def download_drive_spreadsheet(csv_path,fileId,service):
+def download_drive_spreadsheet(csv_path,fileId,service,verbose=False):
     """
     download a spreadsheet as csv file
 
@@ -57,9 +57,33 @@ def download_drive_spreadsheet(csv_path,fileId,service):
     if data:
         with open(csv_path, 'wb') as f:
             f.write(data)
-        print("Download 100%")
+        if verbose:
+            print(f"Download 100% {csv_path}")
+        em2idx = pk.load(open("../data/processed/emojis_png/all/dic.pk","rb"))
+        idx2em = {str(value):key for key,value in em2idx.items()}
+
+        res_df = (pd.read_csv(csv_path)
+                    .rename(columns=lambda x: idx2em.get(x,x))
+                )
+        res_df.to_csv(csv_path,index=False)
     else:
         raise ValueError("Empty file")
+
+def download_all_csv_results(formidx2gid,result_dir,service):
+    """
+    Iterate over the forms present in the index and sequentially download
+    their respective most recent results
+
+    Args:
+        formidx2gid (dict): mapping between form idx and the url to the excel results sheet
+        result_dir (pathlib.Path): directory where to download the results
+    """
+    ids = pd.Series(formidx2gid)
+    for idx,drive_id in ids.iteritems():
+        path = result_dir.joinpath(f"{idx}.csv")
+        download_drive_spreadsheet(path,drive_id,service)
+
+
 
 def download_drive_txt(forms_url_path,file_id,service):
     """
@@ -87,25 +111,3 @@ def download_drive_txt(forms_url_path,file_id,service):
         shutil.copyfileobj(fh, f, length=131072)
 
 
-def download_all_csv_results(results_url,result_path,service):
-    """
-    Iterate over the forms present in the index and sequentially download
-    their respective most recent results
-
-    Args:
-        index_url (str):
-    """
-    results_url = pd.Series(results_url)
-    ids = results_url.apply(lambda x:x.split("/")[-2])
-    for idx,drive_id in ids.iteritems():
-        path = result_path.joinpath(f"{idx}.csv")
-        download_drive_spreadsheet(path,drive_id,service)
-
-    em2idx = pk.load(open("../data/processed/emojis_png/all/dic.pk","rb"))
-    idx2em = {str(value):key for key,value in em2idx.items()}
-
-    for res_path in result_path.iterdir():
-        res_df = (pd.read_csv(res_path)
-                    .rename(columns=lambda x: idx2em.get(x,x))
-                 )
-        res_df.to_csv(res_path,index=False)

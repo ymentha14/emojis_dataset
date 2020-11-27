@@ -21,6 +21,7 @@ from src.utils import generate_password, read_access_keys
 from pathlib import Path
 from IPython.display import clear_output
 
+
 utc=pytz.UTC
 
 def create_mturk_client(aws_access_key_id,aws_secret_access_key,production=False):
@@ -57,141 +58,81 @@ def create_mturk_client(aws_access_key_id,aws_secret_access_key,production=False
     )
     return client
 
-def monitor_worker_tags(client,qualification_type_id='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
+
+def clean_own_worker(client,QualificationTypeId='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
     """
-    Function to run in a separate thread: tag every worker who completed one of the hit with
-    a qualification preventing him to complete another emoji-related hit
-
-    Args:
-        qualification_type_id (str): id of the qualification_type
+    Remove the epfl.dlab worker qualification for debugging purpose
     """
-    print("searching..")
-    while True:
-        time.sleep(1)
-        # search for workers already tagged
-        exworkers = set()
-        qualifs = client.list_workers_with_qualification_type(QualificationTypeId=qualification_type_id,)
-        for qualif in qualifs['Qualifications']:
-            if qualif['QualificationTypeId'] == qualification_type_id:
-                exworkers.add(qualif['WorkerId'])
-
-        # search for new workers
-        worker_ids = set()
-        for hit in client.list_hits()['HITs']:
-            hitid = hit['HITId']
-            result = client.list_assignments_for_hit(HITId=hitid,AssignmentStatuses=['Submitted','Approved','Rejected'])
-            assignments = result['Assignments']
-
-            for assignment in assignments:
-                workerid = assignment['WorkerId']
-                worker_ids.add(workerid)
-
-        worker_ids = worker_ids - exworkers
-        for workerid in worker_ids:
-            print(f"Tagging worker {workerid}")
-            client.associate_qualification_with_worker(
-            QualificationTypeId=qualification_type_id,
-            WorkerId=workerid,
-            IntegerValue=1,
-            SendNotification=False
+    try:
+        client.disassociate_qualification_from_worker(
+            WorkerId='A29C1XYH77RQYM',
+            QualificationTypeId=QualificationTypeId,
+            Reason=''
         )
+    except:
+        print("Worker already clean")
+
 
 def get_answer(answer):
         xml_doc = xmltodict.parse(answer)
         return xml_doc['QuestionFormAnswers']['Answer']['FreeText']
 
-class Watcher():
-    """
-    Class to monitor the workers who complete more than a defined threshold
-    of our tasks ==> tag them to prevent them from keeping answering
-    """
-    def __init__(self,form_results_path,
-                    url_results,
-                    drive_service,
-                    threshold=2,
-                    production=False):
-        self.production = production
-        # retrieval of the access keys
-        aws_access_key_id,aws_secret_access_key = read_access_keys(AWS_KEYS_PATH)
-        # creation of an self.client client
-        self.client = create_mturk_client(aws_access_key_id,aws_secret_access_key,production)
-        self.threshold = threshold
-        self.form_results_path = form_results_path
-        self.url_results = url_results
-        self.drive_service = drive_service
-
-    def get_workers2tag(self):
-        download_all_csv_results(self.url_results,
-                                self.form_results_path,
-                                self.drive_service)
-        meta_df = []
-        for form_path in self.form_results_path.iterdir():
-            df = pd.read_csv(form_path,usecols=['Worker ID'])
-            meta_df.append(df)
-        meta_df = pd.concat(meta_df,axis=0)
-        # number of different
-        forms_count = meta_df['Worker ID'].value_counts()
-        forms_count = forms_count[forms_count > self.threshold]
-        return set(forms_count.index.tolist())
-
-    def get_tagged_workers(self,qualification_type_id='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
-        # search for workers already tagged
-        exworkers = set()
-        qualifs = self.client.list_workers_with_qualification_type(QualificationTypeId=qualification_type_id,)
-        for qualif in qualifs['Qualifications']:
-            if qualif['QualificationTypeId'] == qualification_type_id:
-                exworkers.add(qualif['WorkerId'])
-        return exworkers
-
-    def monitor(self,qualification_type_id='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
-        # search for workers already tagged
-        i = 0
-        while True:
-            print(f"{i} th iteration")
-            # information comes from google drive
-            tagged_workers = self.get_tagged_workers()
-            workers2tag = self.get_workers2tag()
-            # remove the workers already tagged
-            workers2tag = workers2tag - tagged_workers
-            for workerid in workers2tag:
-                print(f"Tagging worker {workerid}")
-                # TODO: do a try except to catch a wrongly typed workerid
-                self.client.associate_qualification_with_worker(
-                    QualificationTypeId=qualification_type_id,
-                    WorkerId=workerid,
-                    IntegerValue=1,
-                    SendNotification=False
-                )
-            clear_output(wait=True)
-            i+=1
-            sleep(5)
-
-class Turker():
-    def __init__(self,hitlayout,
-                    MaxAssignments,
-                    LifetimeInSeconds,
-                    AutoApprovalDelayInSeconds,
-                    AssignmentDurationInSeconds,
-                    Reward,
-                    production=False):
+class MTurkparam():
+    def __init__(self,
+                n_forms,
+                hitlayout="3VQCRCGMCT2NU7RBSKK6J2PIFKVQ77",
+                MaxAssignments = 10,
+                LifetimeInSeconds = 600,
+                AutoApprovalDelayInSeconds=600,
+                AssignmentDurationInSeconds=600,
+                Reward='0.01',):
         """
         Args:
-            hittypeid (str): hittypeid of the template to use
             hitlayout (str): hitlayout of the template to use
             lifetimeinsec (int): lifetime in seconds
         """
-        self.production = production
-        # retrieval of the access keys
-        aws_access_key_id,aws_secret_access_key = read_access_keys(AWS_KEYS_PATH)
-        # creation of an self.client client
         self.MaxAssignments = MaxAssignments
-        self.client = create_mturk_client(aws_access_key_id,aws_secret_access_key,production)
         self.hitlayout = hitlayout
         self.LifetimeInSeconds = LifetimeInSeconds
         self.AutoApprovalDelayInSeconds = AutoApprovalDelayInSeconds
         self.AssignmentDurationInSeconds = AssignmentDurationInSeconds
         self.Reward = Reward
+        self.n_forms = n_forms
+        self.cost = self.MaxAssignments * float(self.Reward) * self.n_forms
+        print(f"Estimated cost:{self.cost:.2f} $")
+    def __repr__(self):
+        return (f"MaxAss:{self.MaxAssignments} Lifetime:{self.LifetimeInSeconds} "
+                 +f"Autoapprov:{self.AutoApprovalDelayInSeconds} Reward:{self.Reward} "
+                +f"AssignDuration:{self.AssignmentDurationInSeconds}")
+
+
+class Turker():
+    def __init__(self,param,
+                    gservice,
+                    formidx2url,
+                    formidx2gid,
+                    formrespath,
+                    production=False,):
+        """
+        Args:
+            hittypeid (str): hittypeid of the template to use
+
+        """
+        self.p = param
+        self.watcher_process = None
+        self.gservice = gservice
+        self.formidx2url = formidx2url
+        self.formidx2gid = formidx2gid
+        self.formrespath = Path(formrespath)
+        self.production = production
+
+        # retrieval of the access keys
+        aws_access_key_id,aws_secret_access_key = read_access_keys(AWS_KEYS_PATH)
+        self.client = create_mturk_client(aws_access_key_id,aws_secret_access_key,production)
+
+        # creation of an self.client client
         self.url = "https://workersandbox.mturk.com/mturk/preview?groupId="# if production else "https://worker.mturk.com/mturk/preview?groupId="
+
         if HIT2FORM_PATH.exists():
             print("Loading hit2form")
             self.hit2form = pk.load(open(HIT2FORM_PATH,"rb"))
@@ -207,7 +148,6 @@ class Turker():
         if len(hits) == 0:
             print("No Hits available")
         else:
-
             expiration = hits[0]['Expiration'].replace(tzinfo=utc)
             now =  datetime.now().replace(tzinfo=utc)
             if expiration < now:
@@ -234,8 +174,51 @@ class Turker():
                 )
             return df
 
+    def create_forms_hits(self):
+        """
 
-    def list_results(self,hit_id):
+        """
+        for idx,url in self.formidx2url.items():
+            print(f"Creating hit for form {idx}")
+
+            myhit = self.client.create_hit(
+                        MaxAssignments=self.p.MaxAssignments,
+                        LifetimeInSeconds = self.p.LifetimeInSeconds,
+                        AutoApprovalDelayInSeconds=self.p.AutoApprovalDelayInSeconds,
+                        AssignmentDurationInSeconds=self.p.AssignmentDurationInSeconds,
+                        Reward=self.p.Reward,
+                        HITLayoutId=self.p.hitlayout,
+                        HITLayoutParameters = [{'Name':'url',
+                                   'Value':url}],
+                        Title=f'Emojis Descriptions n {idx}',
+                        Keywords='emojis, description, sentiment, emotions',
+                        Description='Describe emojis by a single accurate word',
+                        QualificationRequirements=[
+                            {
+                                'QualificationTypeId': '3OR1BBO28PIVPWZMRDTWE8U6OZXNGN',
+                                'Comparator': 'DoesNotExist',
+                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
+                            }
+                        # TODO: add location and hit percentage
+                        ]
+            )
+            self.hit2form[myhit['HIT']['HITId']] = idx
+        self.__update_hit2form()
+
+    def get_results(self,id):
+        """
+        id (str or int): worker_id or form_idx
+        """
+        if type(id) == str:
+            assert(id in self.hit2form.keys())
+            id = self.hit2form[id]
+        path = self.formrespath.joinpath(f"{id}.csv")
+        gid = self.formidx2gid[id]
+        download_drive_spreadsheet(path,gid,self.gservice,verbose=True)
+        df = pd.read_csv(path)
+        return df
+
+    def list_assignments(self,hit_id):
         worker_results = self.client.list_assignments_for_hit(HITId=hit_id, AssignmentStatuses=['Submitted','Approved','Rejected'])
         if worker_results['NumResults'] > 0:
             df = []
@@ -248,11 +231,12 @@ class Turker():
                            'Code':password,
                            'Status':assignment['AssignmentStatus']
                           })
-            return pd.DataFrame(df)
+            df = pd.DataFrame(df)
+            return df
         else:
             print(f"No results ready yet for {hit_id}")
 
-    def list_all_results(self):
+    def list_all_assignments(self):
         df = []
         hits = self.client.list_hits()['HITs']
         if len(hits) == 0:
@@ -260,7 +244,7 @@ class Turker():
             return None
         for hit in hits:
             hit_id = hit['HITId']
-            df.append(self.list_results(hit_id))
+            df.append(self.list_assignments(hit_id))
         df = pd.concat(df,axis=0)
         return df
 
@@ -278,8 +262,7 @@ class Turker():
             print(f"Approving assignment {ass_id}")
             self.client.approve_assignment(AssignmentId=ass_id)
 
-    def approve_correct_assignments(self,hit_id):
-
+    def approve_correct_assignments(self,hit_id,dry_run = False):
         """
         Args:
             correct_hits (Bool): whether to correct correct hits exclusively
@@ -291,13 +274,19 @@ class Turker():
         assignments = self.client.list_assignments_for_hit(HITId=hit_id,AssignmentStatuses=['Submitted'])
         assignments = assignments['Assignments']
 
-        # workers = set([assignment['WorkerID'] for assignment in assignments])
-
+        # Real MTurk worker ids
+        workers = set([assignment['WorkerID'] for assignment in assignments])
         password_frauders = self.detect_password_frauders(assignments=assignments,
                                                             password = generate_password(form_idx))
-        honey_frauders = detect_honey_frauders(form_df,HONEYPOTS)
-        repeat_frauders = detect_repeat_frauders(form_df)
-        frauders = password_frauders.union(honey_frauders).union(repeat_frauders)
+
+        # Manually entered MTurk ids
+        honey_frauders = detect_honey_frauders(form_df,HONEYPOTS) # wrong honeypot
+        repeat_frauders = detect_repeat_frauders(form_df) # repeat words
+        fakeid_frauders = workers - set(form_df['Worker ID'].unique().tolist()) # workers who entered a fake id
+
+        frauders = (password_frauders.union(honey_frauders)
+                                    .union(repeat_frauders)
+                                    .union(fakeid_frauders))
 
         for assignment in assignments:
             ass_id = assignment['AssignmentId']
@@ -312,11 +301,19 @@ class Turker():
 
                 if worker_id in repeat_frauders:
                     RequesterFeedback += "Too many times the same word.\n"
-                self.client.reject_assignment(AssignmentId=ass_id,
+
+                if worker_id in fakeid_frauders:
+                    RequesterFeedback = "Wrong worker id. \n"
+
+                print(f"Reject assid {ass_id}  wid {worker_id} hitid {hit_id} formidx {form_idx}")
+                print(RequesterFeedback)
+                if not dry_run:
+                    self.client.reject_assignment(AssignmentId=ass_id,
                                                 RequesterFeedback=RequesterFeedback)
             else:
-                print(f"Approving assignment {ass_id}")
-                self.client.approve_assignment(AssignmentId=ass_id)
+                print(f"Approve assid {ass_id}  wid {worker_id} hitid {hit_id} formidx {form_idx}")
+                if not dry_run:
+                    self.client.approve_assignment(AssignmentId=ass_id)
 
     def detect_password_frauders(self,assignments,password):
         password_frauders = set()
@@ -332,10 +329,10 @@ class Turker():
         for hit in hits:
             self.__approve_all_assignments(hit['HITId'])
 
-    def approve_correct_hits(self):
+    def approve_correct_hits(self,dry_run=False):
         hits = self.client.list_reviewable_hits()['HITs']
         for hit in hits:
-            self.approve_correct_assignments(hit['HITId'])
+            self.approve_correct_assignments(hit['HITId'],dry_run)
 
     def delete_all_hits(self):
         hits = self.client.list_hits()['HITs']
@@ -374,51 +371,7 @@ class Turker():
         self.approve_all_hits()
         self.delete_all_hits()
 
-    def create_forms_hits(self,forms_url,hittypeid=None,hitlayout=None):
-        """
-        Args:
-            forms_url(dict): mapping between forms index and their respective url
-        """
-        hitlayout = self.hitlayout if hitlayout is None else hitlayout
-        for idx,url in forms_url.items():
-            print(f"Creating hit for form {idx}")
 
-            myhit = self.client.create_hit(
-                        MaxAssignments=self.MaxAssignments,
-                        LifetimeInSeconds = self.LifetimeInSeconds,
-                        AutoApprovalDelayInSeconds=self.AutoApprovalDelayInSeconds,
-                        AssignmentDurationInSeconds=self.AssignmentDurationInSeconds,
-                        Reward=self.Reward,
-                        HITLayoutId=hitlayout,
-                        HITLayoutParameters = [{'Name':'url',
-                                   'Value':url}],
-                        Title=f'Emojis Descriptions n {idx}',
-                        Keywords='emojis, description, sentiment, emotions',
-                        Description='Describe emojis by a single accurate word',
-                        QualificationRequirements=[
-                            {
-                                'QualificationTypeId': '3OR1BBO28PIVPWZMRDTWE8U6OZXNGN',
-                                'Comparator': 'DoesNotExist',
-                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
-                            }
-                        # TODO: add location and hit percentage
-                        ]
-            )
-            self.hit2form[myhit['HIT']['HITId']] = idx
-        self.__update_hit2form()
-
-def clean_own_worker(client,QualificationTypeId='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
-    """
-    Remove the epfl.dlab worker qualification for debugging purpose
-    """
-    try:
-        client.disassociate_qualification_from_worker(
-            WorkerId='A29C1XYH77RQYM',
-            QualificationTypeId=QualificationTypeId,
-            Reason=''
-        )
-    except:
-        print("Worker already clean")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -451,9 +404,9 @@ if __name__ == '__main__':
     # retrieve gdrive service
     service = get_drive_service()
 
-    # download the most recent forms_urls
-    download_forms_urls(URL_INDEX_PATH,file_id,service)
-    forms_url = pd.read_csv(URL_INDEX_PATH,sep=r"\s+",header=None,names=['url'],index_col=0)
+    # download the most recent formidx2urls
+    download_formidx2urls(URL_INDEX_PATH,file_id,service)
+    formidx2url = pd.read_csv(URL_INDEX_PATH,sep=r"\s+",header=None,names=['url'],index_col=0)
 
     # (2). Link to AWS Mturk
 

@@ -111,7 +111,7 @@ def compute_random_trajectory(N_users):
 def plot_trajectories(em_serie,ax=None,N_TRAJ = 20,rand_norm_traj = False):
     """
     Generate and plot the random vocabulary size trajectories as described in build_trajectory
-    
+
     Args:
         em_serie (pd.Serie): serie of list of words for one emoji (independant users on each row assumed)
         N_TRAJ (int): the number of trajectories to compute

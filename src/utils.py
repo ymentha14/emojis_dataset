@@ -5,7 +5,9 @@ from src.constants import skin_tones, em_letters, EMOJIS,man_woman,FE0F_DICT,sex
 
 from copy import copy
 from pdb import set_trace
-
+from src.data.auto_drive import  download_drive_txt
+from src.constants import URL_INDEX_PATH
+import pandas as pd
 
 def limit_memory(maxsize):
     """ Prevent computer from crashing"""
@@ -220,3 +222,12 @@ def print_em_set(emset):
 def generate_password(i):
     a = i * 324 + 932
     return str(a)[:3]
+
+
+def get_form_urls(service,file_id):
+    download_drive_txt(URL_INDEX_PATH,file_id,service)  # download the most recent url_index
+    url_index = pd.read_csv(URL_INDEX_PATH,sep=",",header=None,names=['formurl','resgid'])
+    formidx2url = url_index.formurl.to_dict()
+    formidx2gid = url_index.resgid.to_dict()
+    formidx2gid = {key:val.split("/")[-2] for key,val in formidx2gid.items()}
+    return formidx2url,formidx2gid
