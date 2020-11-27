@@ -20,7 +20,7 @@ from src.data.fraudulous import detect_repeat_frauders,detect_honey_frauders
 from src.utils import generate_password, read_access_keys
 from pathlib import Path
 from IPython.display import clear_output
-
+from pdb import set_trace
 
 utc=pytz.UTC
 
@@ -80,6 +80,7 @@ def get_answer(answer):
 class MTurkparam():
     def __init__(self,
                 n_forms,
+                max_forms_per_worker,
                 hitlayout="3VQCRCGMCT2NU7RBSKK6J2PIFKVQ77",
                 MaxAssignments = 10,
                 LifetimeInSeconds = 600,
@@ -98,6 +99,7 @@ class MTurkparam():
         self.AssignmentDurationInSeconds = AssignmentDurationInSeconds
         self.Reward = Reward
         self.n_forms = n_forms
+        self.max_forms_per_worker = max_forms_per_worker
         self.cost = self.MaxAssignments * float(self.Reward) * self.n_forms
         print(f"Estimated cost:{self.cost:.2f} $")
     def __repr__(self):
@@ -209,11 +211,16 @@ class Turker():
         """
         id (str or int): worker_id or form_idx
         """
-        if type(id) == str:
-            assert(id in self.hit2form.keys())
-            id = self.hit2form[id]
+        try:
+            if type(id) == str:
+                if id.isdigit():
+                    id = int(id)
+                else:
+                    id = self.hit2form[id]
+            gid = self.formidx2gid[id]
+        except KeyError as e:
+            raise KeyError("Invalid form index/ hit id")
         path = self.formrespath.joinpath(f"{id}.csv")
-        gid = self.formidx2gid[id]
         download_drive_spreadsheet(path,gid,self.gservice,verbose=True)
         df = pd.read_csv(path)
         return df
@@ -235,6 +242,7 @@ class Turker():
             return df
         else:
             print(f"No results ready yet for {hit_id}")
+            return None
 
     def list_all_assignments(self):
         df = []
@@ -244,7 +252,11 @@ class Turker():
             return None
         for hit in hits:
             hit_id = hit['HITId']
-            df.append(self.list_assignments(hit_id))
+            assignment = self.list_assignments(hit_id)
+            if assignment is not None:
+                df.append(assignment)
+        if len(df) == 0:
+            return pd.DataFrame()
         df = pd.concat(df,axis=0)
         return df
 
@@ -275,7 +287,7 @@ class Turker():
         assignments = assignments['Assignments']
 
         # Real MTurk worker ids
-        workers = set([assignment['WorkerID'] for assignment in assignments])
+        workers = set([assignment['WorkerId'] for assignment in assignments])
         password_frauders = self.detect_password_frauders(assignments=assignments,
                                                             password = generate_password(form_idx))
 
@@ -283,29 +295,28 @@ class Turker():
         honey_frauders = detect_honey_frauders(form_df,HONEYPOTS) # wrong honeypot
         repeat_frauders = detect_repeat_frauders(form_df) # repeat words
         fakeid_frauders = workers - set(form_df['Worker ID'].unique().tolist()) # workers who entered a fake id
-
         frauders = (password_frauders.union(honey_frauders)
                                     .union(repeat_frauders)
                                     .union(fakeid_frauders))
 
         for assignment in assignments:
             ass_id = assignment['AssignmentId']
-            worker_id = assignment['WorkerID']
+            worker_id = assignment['WorkerId']
             if worker_id in frauders:
                 RequesterFeedback = ""
                 if worker_id in password_frauders:
                     RequesterFeedback += "Invalid confirmation key.\n"
 
                 if worker_id in honey_frauders:
-                    RequesterFeedback += "Non valid obvious emoji answer.\n"
+                    RequesterFeedback += "* Non valid obvious emoji answer.\n"
 
                 if worker_id in repeat_frauders:
-                    RequesterFeedback += "Too many times the same word.\n"
+                    RequesterFeedback += "* Too many times the same word.\n"
 
                 if worker_id in fakeid_frauders:
-                    RequesterFeedback = "Wrong worker id. \n"
+                    RequesterFeedback += "* Wrong worker entered in the form. \n"
 
-                print(f"Reject assid {ass_id}  wid {worker_id} hitid {hit_id} formidx {form_idx}")
+                print(f"Reject wid {worker_id} hitid {hit_id} formidx {form_idx}")
                 print(RequesterFeedback)
                 if not dry_run:
                     self.client.reject_assignment(AssignmentId=ass_id,
@@ -318,7 +329,7 @@ class Turker():
     def detect_password_frauders(self,assignments,password):
         password_frauders = set()
         for assignment in assignments:
-            worker_id = assignment['WorkerID']
+            worker_id = assignment['WorkerId']
             answer = get_answer(assignment['Answer'])
             if answer != password:
                 password_frauders.update(worker_id)
@@ -347,7 +358,7 @@ class Turker():
 
             print(f"Deleting hit {hit_id}")
         except:
-            print(f"Hit {hit_id} in Unassignable mode")
+            print(f"Can't delete {hit_id}. Is it reviewed?")
 
     def __update_hit2form(self):
         pk.dump(self.hit2form,open(HIT2FORM_PATH,"wb"))
@@ -358,6 +369,12 @@ class Turker():
             self.stop_hit(hit['HITId'])
 
     def stop_hit(self,hit_id):
+        """
+        Update the expiration date of the hit at a past date.
+        This allows the assignable hits to go to "Reviewable"
+        state as soon as possible (lets the workers already working
+        finish their task)
+        """
         status= self.client.get_hit(HITId=hit_id)['HIT']['HITStatus']
         # If HIT is active then set it to expire immediately
         if status=='Assignable' or status=='Unassignable':

@@ -108,8 +108,14 @@ if __name__ == '__main__':
         help="id of the files index",
         type=str
     )
+    parser.add_argument(
+        '--max_forms',
+        help="maximum number of forms",
+        type=int
+    )
     args = parser.parse_args()
     file_id = args.id
+    max_forms = args.max_forms
     service = get_drive_service()
 
     formidx2url,formidx2gid = get_form_urls(service,file_id)
@@ -117,5 +123,5 @@ if __name__ == '__main__':
     watcher = Watcher(form_results_dir=WATCHER_FORMS_RESULTS_DIR,
                   formidx2gid=formidx2gid,
                   drive_service=service,
-                  max_forms=1)
+                  max_forms=max_forms)
     watcher.monitor()
