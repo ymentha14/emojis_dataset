@@ -298,7 +298,6 @@ class Turker():
         frauders = (password_frauders.union(honey_frauders)
                                     .union(repeat_frauders)
                                     .union(fakeid_frauders))
-
         for assignment in assignments:
             ass_id = assignment['AssignmentId']
             worker_id = assignment['WorkerId']
