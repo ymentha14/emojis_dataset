@@ -9,6 +9,7 @@ import shutil
 import pandas as pd
 import pickle as pk
 from src.constants import TOKEN_PATH,CREDS_PATH
+import re
 
 def get_drive_service():
     """
@@ -61,10 +62,17 @@ def download_drive_spreadsheet(csv_path,fileId,service,verbose=False):
             print(f"Download 100% {csv_path}")
         em2idx = pk.load(open("../data/processed/emojis_png/all/dic.pk","rb"))
         idx2em = {str(value):key for key,value in em2idx.items()}
-
-        res_df = (pd.read_csv(csv_path)
-                    .rename(columns=lambda x: idx2em.get(x,x))
-                )
+        res_df = pd.read_csv(csv_path)
+        columns = res_df.columns
+        columns_renamed = []
+        for field in columns:
+            regex_match = re.search("^([0-9]+)\s*\(emoji above\)$", field)
+            if regex_match:
+                columns_renamed.append(idx2em[regex_match[1]])
+            else:
+                columns_renamed.append(field)
+        res_df.columns = columns_renamed
+        
         res_df.to_csv(csv_path,index=False)
     else:
         raise ValueError("Empty file")

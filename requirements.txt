@@ -2,8 +2,15 @@
 setuptools==50.3.0
 -e .
 emoji==0.6.0
-jupyterlab==1.2.6
+jupyterlab==2.2.9
 pandas==1.1.2
+boto3==1.16.25
+xmltodict==0.12.0
+google-auth
+google-api-python-client
+google-auth-oauthlib
+ipywidgets==7.5.1
+jdc
 numpy==1.16.4
 matplotlib==3.3.2
 scikit-learn==0.23.2

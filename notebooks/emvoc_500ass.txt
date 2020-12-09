@@ -1,0 +1,119 @@
+🔈
+	volume:4
+	sound:3
+	speaker:3
+🥜
+	peanut:9
+	peanuts:1
+😆
+	laugh:4
+	laughing:4
+	lfunny:1
+	laughter:1
+📭
+	mailbox:6
+	mail:4
+🎞️
+	film:6
+	flim:2
+	video:1
+	movie:1
+☂️
+	umbrella:9
+	rain:1
+💣
+	bomb:10
+🛐
+	pray:4
+	worship:2
+	church:1
+	shelter:1
+	praying:1
+	prayer:1
+🌸
+	flower:9
+	lilly:1
+🛣️
+	highway:7
+	driving:1
+	freeway:1
+	exit:1
+📡
+	satellite:3
+	satelite:2
+	antenna:2
+	signal:1
+	satalight:1
+	cable:1
+👨‍💼
+	presentation:2
+	stocks:1
+	teacher:1
+	businessman:1
+	happy:1
+	manager:1
+	work:1
+	office:1
+	employee:1
+🛋️
+	couch:5
+	sofa:2
+	furniture:1
+	home:1
+	livingroom:1
+🥴
+	crazy:2
+	drunk:2
+	sick:1
+	guilt:1
+	silly:1
+	awkward:1
+	confused:1
+	nervous:1
+🖲️
+	button:5
+	space:1
+	ufo:1
+	knight:1
+	bot:1
+	alien:1
+🤤
+	drool:3
+	drooling:3
+	vomit:1
+	funny:1
+	yum:1
+	happy:1
+⭐
+	star:10
+🥘
+	food:2
+	lunch:1
+	dinner:1
+	cook:1
+	soup:1
+	skillet:1
+	stew:1
+	stewpot:1
+	paella:1
+💊
+	pill:5
+	medicine:2
+	capsule:1
+	tablet:1
+	pills:1
+🔨
+	hammer:9
+	tool:1
+😮
+	wow:5
+	shocked:2
+	ohh:1
+	exclamation:1
+	surprised:1
+📟
+	pager:5
+	calculator:2
+	card:1
+	debit:1
+	creditcard:1

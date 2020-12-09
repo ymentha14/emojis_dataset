@@ -48,7 +48,13 @@ def get_control_panel(turk,file_id):
     bmonitor = widgets.Button(description='monitor',button_style='info')
     def f8(b):
         if turk.watcher_process is None:
-            sub = subprocess.Popen(['python3', WATCHER_PATH,f"--id={file_id}",f"--max_forms={turk.p.max_forms_per_worker}"], close_fds=True)
+            sub = subprocess.Popen(['python3',
+                                    WATCHER_PATH,
+                                    f"--id={file_id}",
+                                    f"--max_forms={turk.p.max_forms_per_worker}",
+                                    f"--qualifid={turk.p.qualifid}",
+                                    f"--production={turk.p.production}"],
+                                close_fds=True)
             print(f"Started subprocess {sub}")
             turk.watcher_process = sub
         else:
