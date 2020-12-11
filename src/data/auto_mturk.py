@@ -13,7 +13,7 @@ import pytz
 import xmltodict
 from time import sleep
 
-from src.constants import (AWS_KEYS_PATH, CREDS_PATH, URL_INDEX_PATH,HIT2FORM_PATH,FORMS_RESULTS_DIR,HONEYPOTS)
+from src.constants import (AWS_KEYS_PATH, CREDS_PATH, URL_INDEX_PATH,HIT2FORM_PATH,HIT2FORM_PATH_SANDBOX,FORMS_RESULTS_DIR,HONEYPOTS)
 from src.data.auto_drive import get_drive_service, download_drive_txt, download_drive_spreadsheet,download_all_csv_results
 from src.data.fraudulous import detect_repeat_frauders,detect_honey_frauders
 
@@ -36,7 +36,7 @@ def create_mturk_client(aws_access_key_id,aws_secret_access_key,production=False
     Returns:
         client (boto3.client)
     """
-    create_hits_in_production = False
+    create_hits_in_production = production
     environments = {
             "production": {
                 "endpoint": "https://mturk-requester.us-east-1.amazonaws.com",
@@ -59,7 +59,7 @@ def create_mturk_client(aws_access_key_id,aws_secret_access_key,production=False
     return client
 
 
-def clean_own_worker(client,QualificationTypeId='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'):
+def clean_own_worker(client,QualificationTypeId):
     """
     Remove the epfl.dlab worker qualification for debugging purpose
     """
@@ -72,6 +72,54 @@ def clean_own_worker(client,QualificationTypeId='3OR1BBO28PIVPWZMRDTWE8U6OZXNGN'
     except:
         print("Worker already clean")
 
+def get_batch_indexes(batch_number=None,batch_size=7,MaxAssignments=30):
+    """
+    Function to batch formidx2gid and formidx2url
+
+    Args:
+        batch_size(int): number of forms per batch
+        batch_number(int): number of the batch to get indexes for
+    
+    Return:
+        [list of int]: indexes of the forms to run the analysis for
+    """
+    if batch_number is None:
+        if len(list(FORMS_RESULTS_DIR.glob("*.csv"))) == 0:
+            return 0,list(range(0,batch_size))
+        max_form_idx = max([int(path.stem) for path in FORMS_RESULTS_DIR.glob("*.csv")])
+        
+        if((max_form_idx+1) % batch_size != 0):
+            raise ValueError("Problem of downloading: missing form csv files")
+
+        # we check all the batches from previous runs
+        for i in range(max_form_idx-batch_size+1):
+            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv")
+            if df.shape[0] < MaxAssignments:
+                raise ValueError(f"The {i}th form is missing some entries in a previous batch")
+        
+        # we check batches of last run
+        incomplete_forms = []
+        for i in range(max_form_idx-batch_size+1,max_form_idx):
+            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv")
+            completion_check = df.shape[0] < MaxAssignments
+            if completion_check:
+                incomplete_forms.append(i)
+
+        # we did not finish the last run yet
+        if any(incomplete_forms):
+            batch_number = max_form_idx // batch_size -1
+            start_idx = max_form_idx - batch_size + 1
+            print(f"Last run did not finish for indexes {incomplete_forms}: resuming batch number {batch_number}")
+
+        # last run finished successfully, we pass to the next batch
+        else:
+            batch_number = max_form_idx // batch_size
+            start_idx = max_form_idx+1
+            print(f"New run: starting batch number {batch_number}")
+    else:
+        start_idx = batch_number * batch_size
+    forms_idxes = list(range(start_idx,start_idx+batch_size))
+    return batch_number,forms_idxes
 
 def get_answer(answer):
         xml_doc = xmltodict.parse(answer)
@@ -81,7 +129,7 @@ class MTurkparam():
     def __init__(self,
                 n_forms,
                 max_forms_per_worker,
-                hitlayout="3VQCRCGMCT2NU7RBSKK6J2PIFKVQ77",
+                production=False,
                 MaxAssignments = 10,
                 LifetimeInSeconds = 600,
                 AutoApprovalDelayInSeconds=600,
@@ -93,7 +141,6 @@ class MTurkparam():
             lifetimeinsec (int): lifetime in seconds
         """
         self.MaxAssignments = MaxAssignments
-        self.hitlayout = hitlayout
         self.LifetimeInSeconds = LifetimeInSeconds
         self.AutoApprovalDelayInSeconds = AutoApprovalDelayInSeconds
         self.AssignmentDurationInSeconds = AssignmentDurationInSeconds
@@ -102,11 +149,22 @@ class MTurkparam():
         self.max_forms_per_worker = max_forms_per_worker
         self.cost = self.MaxAssignments * float(self.Reward) * self.n_forms
         print(f"Estimated cost:{self.cost:.2f} $")
+        self.production = production
+        if self.production:
+            self.qualifid = "3N5C8MI2ZCLZ0AAT5UVXEVWWHP8G22"
+            self.hitlayout = "3ACG29O6JDJKYOPH2ORTS52TR57YKA"
+            self.url = "https://workersandbox.mturk.com/mturk/preview?groupId="
+
+        else:
+            self.qualifid = "3OR1BBO28PIVPWZMRDTWE8U6OZXNGN"
+            self.hitlayout = "3XJFTJAV8QARKRU4KW7Q2OQT6WM9R4"
+            self.url = "https://worker.mturk.com/mturk/preview?groupId="
+
+
     def __repr__(self):
         return (f"MaxAss:{self.MaxAssignments} Lifetime:{self.LifetimeInSeconds} "
                  +f"Autoapprov:{self.AutoApprovalDelayInSeconds} Reward:{self.Reward} "
                 +f"AssignDuration:{self.AssignmentDurationInSeconds}")
-
 
 class Turker():
     def __init__(self,param,
@@ -114,7 +172,7 @@ class Turker():
                     formidx2url,
                     formidx2gid,
                     formrespath,
-                    production=False,):
+                    ):
         """
         Args:
             hittypeid (str): hittypeid of the template to use
@@ -126,27 +184,37 @@ class Turker():
         self.formidx2url = formidx2url
         self.formidx2gid = formidx2gid
         self.formrespath = Path(formrespath)
-        self.production = production
 
         # retrieval of the access keys
         aws_access_key_id,aws_secret_access_key = read_access_keys(AWS_KEYS_PATH)
-        self.client = create_mturk_client(aws_access_key_id,aws_secret_access_key,production)
+        self.client = create_mturk_client(aws_access_key_id,aws_secret_access_key,self.p.production)
 
         # creation of an self.client client
-        self.url = "https://workersandbox.mturk.com/mturk/preview?groupId="# if production else "https://worker.mturk.com/mturk/preview?groupId="
-
-        if HIT2FORM_PATH.exists():
+        self.hit2formpath = HIT2FORM_PATH if self.p.production else HIT2FORM_PATH_SANDBOX
+        if self.hit2formpath.exists():
             print("Loading hit2form")
-            self.hit2form = pk.load(open(HIT2FORM_PATH,"rb"))
+            self.hit2form = pk.load(open(self.hit2formpath,"rb"))
         else:
             self.hit2form = {}
 
     def get_url(self,hit_id):
         hit = self.client.get_hit(HITId=hit_id)
-        return self.url + hit['HIT']['HITGroupId']
+        return self.p.url + hit['HIT']['HITGroupId']
+
+    def list_emojis_hits(self):
+        """
+        Restrict the hits to the one associated with our task
+        """
+        hits = [hit for hit in self.client.list_hits()['HITs'] if hit['Title'].startswith("Emojis Descriptions n")]
+        return hits
+    
+    def list_reviewable_emojis_hits(self):
+        emojis_hitids = [hit['HITId'] for hit in self.list_emojis_hits()]
+        hits = [hit for hit in self.client.list_reviewable_hits()['HITs'] if hit['HITId'] in emojis_hitids]
+        return hits
 
     def list_hits(self):
-        hits = self.client.list_hits()['HITs']
+        hits = self.list_emojis_hits()
         if len(hits) == 0:
             print("No Hits available")
         else:
@@ -162,7 +230,7 @@ class Turker():
             for hit in hits:
                 row = {}
                 hitid = hit['HITId']
-                row['FormIdx'] = self.hit2form[hitid]
+                row['FormIdx'] = self.hit2form.get(hitid,9999)
                 row['HITId'] = hitid
                 row['Status'] = hit['HITStatus']
                 comp = self.client.list_assignments_for_hit(HITId=hitid, AssignmentStatuses=['Submitted','Approved','Rejected'])['NumResults']
@@ -183,6 +251,46 @@ class Turker():
         for idx,url in self.formidx2url.items():
             print(f"Creating hit for form {idx}")
 
+            
+            if self.p.production:
+                QualificationRequirements = [
+                            {
+                                'QualificationTypeId': f'{self.p.qualifid}',
+                                'Comparator': 'DoesNotExist',
+                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
+                            },
+                            {
+                                'QualificationTypeId': '000000000000000000L0', #PercentAssignmentsApproved
+                                'Comparator': 'GreaterThanOrEqualTo',
+                                'IntegerValues':[99],
+                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
+                            },
+                            {
+                                'QualificationTypeId': '00000000000000000071', #Location
+                                'Comparator': 'EqualTo',
+                                'LocaleValues': [
+                                    {
+                                        'Country': 'US',
+                                    },
+                                ],
+                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
+                            },
+                            {
+                                'QualificationTypeId': '00000000000000000040', # Number of hits
+                                'Comparator': 'GreaterThanOrEqualTo',
+                                'IntegerValues':[500],
+                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
+                            }
+                        ]
+            else:
+                QualificationRequirements=[
+                            {
+                                'QualificationTypeId': f"{self.p.qualifid}",
+                                'Comparator': 'DoesNotExist',
+                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
+                            }
+                        ]
+
             myhit = self.client.create_hit(
                         MaxAssignments=self.p.MaxAssignments,
                         LifetimeInSeconds = self.p.LifetimeInSeconds,
@@ -195,14 +303,8 @@ class Turker():
                         Title=f'Emojis Descriptions n {idx}',
                         Keywords='emojis, description, sentiment, emotions',
                         Description='Describe emojis by a single accurate word',
-                        QualificationRequirements=[
-                            {
-                                'QualificationTypeId': '3OR1BBO28PIVPWZMRDTWE8U6OZXNGN',
-                                'Comparator': 'DoesNotExist',
-                                'ActionsGuarded': 'DiscoverPreviewAndAccept'
-                            }
-                        # TODO: add location and hit percentage
-                        ]
+                        QualificationRequirements=QualificationRequirements
+                        
             )
             self.hit2form[myhit['HIT']['HITId']] = idx
         self.__update_hit2form()
@@ -246,7 +348,7 @@ class Turker():
 
     def list_all_assignments(self):
         df = []
-        hits = self.client.list_hits()['HITs']
+        hits = self.list_emojis_hits()
         if len(hits) == 0:
             print("No results")
             return None
@@ -280,10 +382,17 @@ class Turker():
             correct_hits (Bool): whether to correct correct hits exclusively
         """
         form_idx = self.hit2form[hit_id]
+
+        # path where to store the results
         form_path = FORMS_RESULTS_DIR.joinpath(f"{form_idx}.csv")
+
+        drive_id = self.formidx2gid[form_idx]
+        # ensure we have the latest version for this given file
+        download_drive_spreadsheet(form_path,drive_id,self.gservice,verbose=True)
         form_df = pd.read_csv(form_path)
 
-        assignments = self.client.list_assignments_for_hit(HITId=hit_id,AssignmentStatuses=['Submitted'])
+
+        assignments = self.client.list_assignments_for_hit(HITId=hit_id,AssignmentStatuses=['Submitted'])#,'Approved'])
         assignments = assignments['Assignments']
 
         # Real MTurk worker ids
@@ -321,7 +430,7 @@ class Turker():
                     self.client.reject_assignment(AssignmentId=ass_id,
                                                 RequesterFeedback=RequesterFeedback)
             else:
-                print(f"Approve assid {ass_id}  wid {worker_id} hitid {hit_id} formidx {form_idx}")
+                print(f"Approve wid {worker_id} hitid {hit_id} formidx {form_idx}")
                 if not dry_run:
                     self.client.approve_assignment(AssignmentId=ass_id)
 
@@ -335,21 +444,22 @@ class Turker():
         return password_frauders
 
     def approve_all_hits(self):
-        hits = self.client.list_reviewable_hits()['HITs']
+        hits = self.list_reviewable_emojis_hits()
         for hit in hits:
             self.__approve_all_assignments(hit['HITId'])
 
     def approve_correct_hits(self,dry_run=False):
-        hits = self.client.list_reviewable_hits()['HITs']
+        hits = self.list_reviewable_emojis_hits()
         for hit in hits:
             self.approve_correct_assignments(hit['HITId'],dry_run)
 
     def delete_all_hits(self):
-        hits = self.client.list_hits()['HITs']
+        hits = self.list_emojis_hits()
         for hit in hits:
             self.delete_hit(hit['HITId'])
 
     def delete_hit(self,hit_id):
+        assert(hit_id in self.hit2form)
         try:
             self.client.delete_hit(HITId=hit_id)
             del self.hit2form[hit_id]
@@ -360,10 +470,10 @@ class Turker():
             print(f"Can't delete {hit_id}. Is it reviewed?")
 
     def __update_hit2form(self):
-        pk.dump(self.hit2form,open(HIT2FORM_PATH,"wb"))
+        pk.dump(self.hit2form,open(self.hit2formpath,"wb"))
 
     def stop_all_hits(self):
-        hits = self.client.list_hits()['HITs']
+        hits = self.list_emojis_hits()
         for hit in hits:
             self.stop_hit(hit['HITId'])
 
@@ -374,6 +484,7 @@ class Turker():
         state as soon as possible (lets the workers already working
         finish their task)
         """
+        assert(hit_id in self.hit2form)
         status= self.client.get_hit(HITId=hit_id)['HIT']['HITStatus']
         # If HIT is active then set it to expire immediately
         if status=='Assignable' or status=='Unassignable':

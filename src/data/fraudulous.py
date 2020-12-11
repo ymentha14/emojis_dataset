@@ -2,14 +2,13 @@ import pickle as pk
 from src.constants import emotions_faces,REF_PATH,MAPPING_PATH, E2V_PATH, W2V_PATH, DATA_PATH
 import sys
 sys.path.append("../../emoji2vec_working/")
-from phrase2vec import Phrase2Vec
 from src.data.form10_eda import *
 import seaborn as sns
 import numpy as np
 from src.constants import COLOR_FRAUD,COLOR_TRUE
 import Levenshtein
 from pdb import set_trace
-
+from src.utils import extract_emojis
 ###################### SINGLE WORD ######################
 def detect_repeat_frauders(form_df,threshold=0.8):
     """

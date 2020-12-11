@@ -43,7 +43,7 @@ em_letters = ['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '�
               '🇼', '🇽', '🇾', '🇿']
 em_numbers = ["0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣",
               "8⃣","5⃣","4⃣","9⃣","1⃣","7⃣","6⃣","3⃣","2⃣","0⃣"]
-
+em_hours = ["🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛","🕜","🕝","🕞","🕟","🕠","🕡","🕢","🕣","🕤","🕥","🕦","🕧"]
 flags = ["🇦🇨","🇦🇩","🇦🇪","🇦🇫","🇦🇬","🇦🇮","🇦🇱","🇦🇲","🇦🇴","🇦🇶","🇦🇷","🇦🇸","🇦🇹",
 "🇦🇺","🇦🇼","🇦🇽","🇦🇿","🇧🇦","🇧🇧","🇧🇩","🇧🇪","🇧🇫","🇧🇬","🇧🇭","🇧🇮","🇧🇯","🇧🇱","🇧🇲",
 "🇧🇳","🇧🇴","🇧🇶","🇧🇷","🇧🇸","🇧🇹","🇧🇻","🇧🇼","🇧🇾","🇧🇿","🇨🇦","🇨🇨","🇨🇩","🇨🇫","🇨🇬",
@@ -75,7 +75,8 @@ E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
 W2V_PATH = str(REF_PATH.joinpath('data/word2vec/GoogleNews-vectors-negative300.bin'))
 DATA_PATH = str(REF_PATH.joinpath("data/raw_training_data/emoji_joined.txt"))
 
-REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emojivec")
+#REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emojivec")
+REPO_PATH = Path("/home/ymentha/emojivec")
 TWEET_PATH = REPO_PATH.joinpath("data/raw/tweets/big_tweet.csv")
 TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
 
@@ -90,8 +91,9 @@ WATCHER_PATH = REPO_PATH.joinpath("src/data/watcher.py")
 URL_INDEX_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/url_index.txt")
 FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_results/")
 WATCHER_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/watcher_forms_results/")
+HIT2FORM_PATH_SANDBOX = REPO_PATH.joinpath("data/processed/auto_mturk/hit2formsandbox.pk")
 HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")
-
+LOG_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_log_results")
 # Em2Png
 PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
 
@@ -107,24 +109,22 @@ NMB_FORMS_THRESHOLD = 2
 HONEYPOTS = {"☂️":["rain","umbrella"],
              "⭐":["star"],
              "☀️":["sun","sunny"],
-             "🥝":["kiwi"],
-             "🥜":["peanut","peanuts"],
-             "🏀":["basket","basketball"],
-             "🍐":["pear"],
+             "🥜":["peanut","peanuts","nut"],
+             "🏀":["basket","basketball","ball"],
              "🍑":["peach"],
              "🍒":["cherry","cherries"],
              "🥑":["avocado"],
              "🥒":["pickle","cucumber"],
-             "🥓":["bacon"],
              "🥕":["carrot"],
-             "🍉":["watermelon"],
-             "🍋":["lemon","lime"],
+             "🦆":["duck","penguin"],
+             "🍉":["watermelon","melon"],
+             "🍋":["lemon","lime","mango"],
              "🍌":["banana"],
              "🍍":["ananas"],
              "🍎":["apple"],
              "🍓":["strawberry"],
-             "🍔":["burger"],
+             "🍔":["burger","hamburger"],
              "🍕":["pizza"],
              "🍩":["donut","donuts"],
-             "🍪":["cookie","cookies"]
+             "🍪":["cookie","cookies","biscuit"]
             }

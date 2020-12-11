@@ -1,0 +1,494 @@
+☂️
+	umbrella:24
+	umberlla:5
+	umberlaw:1
+	rain:1
+⭐
+	star:39
+	aplus:1
+☀️
+	sun:25
+	bright:1
+	light:1
+	sunny:3
+	sunshine:2
+🥝
+	melon:3
+	waterlemon:2
+	kiwi:2
+	watermelan:2
+	cherry:1
+	watermelon:1
+🥜
+	peanut:11
+	peanuts:3
+	groundnut:2
+	nut:3
+	seed:1
+	nuts:1
+🏀
+	ball:9
+	basketball:2
+
+🍐
+	pear:3
+	jackfruit:2
+	nuts:2
+	bottleguard:1
+	rasperry:1
+	chowchow:1
+	bottlegourd:1
+🍑
+	apple:6
+	peach:6
+	strewberry:2
+	kawali:1
+	cherry:1
+	freshskincare:1
+	fruit:3
+	tomato:1
+🍒
+	cherry:7
+	litchi:2
+	cherries:1
+	grapes:1
+🥑
+	avocado:5
+	avacado:2
+	veldrika:1
+	coco:1
+	avacoda:1
+	vertical:1
+🥒
+	cucumber:4
+	pickle:2
+	bread:1
+	teens:1
+	teen:1
+	snakeguard:1
+	bottlegourd:1
+🥓
+	bacon:5
+	beef:4
+	chewing:3
+	cottoncandy:1
+	candy:1
+	rainbow:3
+	waves:1
+	sweet:1
+	river:1
+	wave:1
+🥕
+	carrot:8
+	kerat:1
+🍉
+	watermelon:7
+	melon:1
+	watermilon:1
+🍋
+	lemon:7
+	mango:2
+🍌
+	banana:9
+🍍
+	pineapple:9
+🍎
+	apple:9
+🍓
+	strawberry:8
+	strewberry:1
+🍔
+	burger:7
+	hamburger:2
+🍕
+	pizza:8
+	icecreamy:1
+🍩
+	donut:6
+	candy:2
+	doughnut:1
+🍪
+	cookie:6
+	bread:1
+	biscuit:1
+	candy:1
+🏨
+	hospital:6
+	house:2
+	builiding:1
+	txt:1
+🟡
+	sun:3
+	circle:2
+	moon:2
+	what:1
+	thesun:1
+	sunny:1
+💎
+	diamond:7
+	dimond:1
+	precious:1
+	love:1
+🥖
+	bread:6
+	burger:1
+	pie:1
+	breadstick:1
+	food:1
+🤾
+	dodgeball:2
+	sports:2
+	throwing:1
+	games:1
+	man:1
+	vollyball:1
+	basketball:1
+	play:1
+✉️
+	mail:7
+	message:1
+	envelope:1
+	letter:1
+🕧
+	clock:2
+	on:1
+	power:1
+	watch:1
+	sixpm:1
+	coin:1
+	dinner:1
+	info:1
+	onoff:1
+🌴
+	tree:7
+	vacation:2
+	palm:1
+🌷
+	flower:5
+	tulip:2
+	lotus:2
+	flowers:1
+👨‍🚀
+	astronaut:2
+	friend:2
+	awe:1
+	glow:1
+	player:1
+	man:1
+	charming:1
+	awesome:1
+🎃
+	pumkin:2
+	halloween:2
+	pumpkin:2
+	haloweenpumpkin:1
+	jackolantern:1
+	pumbkin:1
+	hallowween:1
+👨‍🦲
+	happy:5
+	bald:1
+	joker:1
+	human:1
+	baby:1
+	look:1
+🚶
+	walking:5
+	walk:5
+🦪
+	egg:3
+	omellette:1
+	omlete:1
+	oyester:1
+	vetical:1
+	eggs:1
+	golfing:1
+	food:1
+🖊️
+	pen:9
+	write:1
+🐖
+	pig:8
+	pork:1
+	money:1
+🔠
+	letters:4
+	alphabet:2
+	english:1
+	alphabets:1
+	abcs:1
+	simple:1
+😿
+	sad:4
+	cat:2
+	crying:2
+	cry:1
+	fear:1
+🥬
+	leaf:4
+	lettuce:3
+	spinach:2
+	salad:1
+🎉
+	party:5
+	celebration:1
+	wishes:1
+	crisp:1
+	popper:1
+	congrats:1
+☯️
+	yinyang:2
+	capricorn:1
+	reverse:1
+	zen:1
+	yingyang:1
+	dot:1
+	serenity:1
+	kungfu:1
+	yun:1
+👚
+	shirt:6
+	dress:2
+	shart:1
+	cloth:1
+🦙
+	dog:2
+	animal:2
+	deer:2
+	llama:1
+	duck:1
+	dear:1
+	horse:1
+⚡
+	power:2
+	lightning:2
+	prise:1
+	symbol:1
+	spark:1
+	idea:1
+	charging:1
+	fast:1
+🎓
+	graduation:2
+	hat:2
+	cap:2
+	graduate:2
+	education:1
+	literation:1
+😼
+	cat:5
+	angry:2
+	revenge:1
+	meow:1
+	animal:1
+〰️
+	wave:5
+	wavelength:1
+	dimple:1
+	water:1
+	drawing:1
+	bend:1
+🔐
+	lock:5
+	key:2
+	lockandkey:1
+	locked:1
+	security:1
+🦆
+	duck:10
+💯
+	perfect:2
+	number:2
+	percentage:1
+	century:1
+	score:1
+	mark:1
+	good:1
+	centum:1
+📮
+	mail:4
+	message:1
+	signal:1
+	watch:1
+	post:1
+	mailbox:1
+	redlight:1
+🔈
+	speaker:9
+	volume:1
+😆
+	laughing:3
+	happy:2
+	smile:2
+	laughter:1
+	cheeky:1
+	laugh:1
+📭
+	mailbox:6
+	mail:2
+	pipe:1
+	sent:1
+🎞️
+	movie:4
+	film:3
+	filmroll:1
+	roll:1
+	video:1
+💣
+	bomb:9
+	light:1
+🛐
+	pray:3
+	shelter:2
+	prayer:2
+	symbol:1
+	confessional:1
+	praying:1
+🌸
+	flower:9
+	rose:1
+🛣️
+	road:2
+	highway:2
+	roadway:1
+	trail:1
+	driving:1
+	roadsign:1
+	freeway:1
+	race:1
+📡
+	satellite:4
+	transmit:1
+	dish:1
+	speaker:1
+	antenna:1
+	symbol:1
+	alarm:1
+👨‍💼
+	man:4
+	smiley:2
+	accountant:1
+	businessman:1
+	business:1
+	employee:1
+🛋️
+	sofa:3
+	chair:3
+	soffa:1
+	home:1
+	soba:1
+	couch:1
+🥴
+	sad:3
+	confused:2
+	sickly:1
+	feeling:1
+	smiley:1
+	uglyface:1
+	woozy:1
+🖲️
+	bottle:3
+	button:2
+	lipstick:1
+	spaceship:1
+	robot:1
+	light:1
+	horn:1
+🤤
+	smiley:2
+	drooling:2
+	content:1
+	overflow:1
+	droolingface:1
+	facewithjewl:1
+	facewithjollu:1
+	hungry:1
+🥘
+	pan:3
+	cooking:2
+	soup:2
+	dinner:1
+	pancooking:1
+	stew:1
+💊
+	tablet:5
+	pill:2
+	taplete:1
+	pills:1
+	medicine:1
+🔨
+	hammer:8
+	hamer:1
+	himmer:1
+😮
+	speachlessface:2
+	suprised:1
+	smiley:1
+	surprised:1
+	exited:1
+	wow:1
+	surprise:1
+	speechlessface:1
+	excited:1
+📟
+	pager:3
+	tablet:2
+	laptop:2
+	calculator:1
+	radio:1
+	device:1
+🥿
+	shoe:8
+	ladycutshow:1
+	shoes:1
+	show:1
+😔
+	sad:9
+	depressed:2
+🔽
+	down:6
+	icon:1
+	downvote:1
+	vertical:1
+	play:1
+	triangle:1
+👩
+	girl:4
+	woman:3
+	happy:2
+	female:1
+	lady:1
+📹
+	camera:5
+	video:4
+	record:1
+	floder:1
+🍤
+	shrimp:5
+	seafood:1
+	snail:1
+	harron:1
+	snake:1
+	stretching:1
+	prawn:1
+🚥
+	traffic:3
+	signal:2
+	stoplight:2
+	trafficesignal:1
+	single:1
+	trafficlight:1
+	traficlight:1
+🎻
+	violin:5
+	guitar:4
+	cello:1
+	fiddle:1
+⌨️
+	keyboard:11
+🧙
+	wizard:7
+	witch:1
+	joker:1
+	old:1
+	jocker:1
