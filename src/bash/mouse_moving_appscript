@@ -10,6 +10,6 @@ for ((i=1;i<=iterations;i++)); do
   xdotool mousemove --sync 765 241 &&
   sleep "$tim" &&
   echo "step 4" &&
-  xdotool mousemove --sync 828 538 click 1 &&
+  xdotool mousemove --sync 821 610 click 1 &&
   sleep 120
 done
