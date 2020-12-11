@@ -9,6 +9,7 @@ from src.constants import COLOR_FRAUD,COLOR_TRUE
 import Levenshtein
 from pdb import set_trace
 from src.utils import extract_emojis
+
 ###################### SINGLE WORD ######################
 def detect_repeat_frauders(form_df,threshold=0.8):
     """
@@ -38,6 +39,25 @@ def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
         form_df[em] = form_df[em].apply(lambda word: min([Levenshtein.distance(word,corr_word) for corr_word in corr_words]) > dist_lshtein)
     frauder_list = form_df[form_df.any(axis=1)].index.tolist()
     return set(frauder_list)
+
+def get_wrong_honey_entries(form_df,honeypots,dist_lshtein=2):
+    """
+    Returns the row of form_df which did not pass the honeypots test
+
+    Args:
+        form_df (pd.df): dataframe from a gform
+
+    Return:
+        [pd.df]: same df with honey frauders entries exclusively
+    """
+    form_df = form_df.set_index('Worker ID').copy()
+    honey_columns = [em for em in form_df.columns if em in honeypots.keys()]
+    form_df = form_df[honey_columns]
+    assert(form_df.shape[1] > 0)
+    for em in honey_columns:
+        corr_words = honeypots[em]
+        form_df[em] = form_df[em].apply(lambda word: min([Levenshtein.distance(word,corr_word) for corr_word in corr_words]) > dist_lshtein)
+    return form_df
 #########################################################
 
 def plot_double_hist(user_serie,fraud):

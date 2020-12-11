@@ -75,8 +75,9 @@ E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
 W2V_PATH = str(REF_PATH.joinpath('data/word2vec/GoogleNews-vectors-negative300.bin'))
 DATA_PATH = str(REF_PATH.joinpath("data/raw_training_data/emoji_joined.txt"))
 
-#REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emojivec")
-REPO_PATH = Path("/home/ymentha/emojivec")
+REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emojivec")
+if not REPO_PATH.exists():
+    REPO_PATH = Path("/home/ymentha/emojivec")
 TWEET_PATH = REPO_PATH.joinpath("data/raw/tweets/big_tweet.csv")
 TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
 
@@ -96,7 +97,8 @@ HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")
 LOG_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_log_results")
 # Em2Png
 PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
-
+EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/processed/emojis_png/pickles/dic.pk")
+SELECTED_EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/processed/emojis_png/pickles/seldic.pk")
 ########################################################
 
 

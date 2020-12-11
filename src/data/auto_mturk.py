@@ -72,35 +72,36 @@ def clean_own_worker(client,QualificationTypeId):
     except:
         print("Worker already clean")
 
-def get_batch_indexes(batch_number=None,batch_size=7,MaxAssignments=30):
+def get_batch_indexes(parent_dir,batch_number=None,batch_size=7,MaxAssignments=30):
     """
     Function to batch formidx2gid and formidx2url
 
     Args:
         batch_size(int): number of forms per batch
         batch_number(int): number of the batch to get indexes for
-    
+
     Return:
         [list of int]: indexes of the forms to run the analysis for
     """
     if batch_number is None:
-        if len(list(FORMS_RESULTS_DIR.glob("*.csv"))) == 0:
+        if len(list(parent_dir.glob("**/*.csv"))) == 0:
+            print("Starting first batch")
             return 0,list(range(0,batch_size))
-        max_form_idx = max([int(path.stem) for path in FORMS_RESULTS_DIR.glob("*.csv")])
-        
+        max_form_idx = max([int(path.stem) for path in FORMS_RESULTS_DIR.glob("**/*.csv")])
+
         if((max_form_idx+1) % batch_size != 0):
             raise ValueError("Problem of downloading: missing form csv files")
 
         # we check all the batches from previous runs
         for i in range(max_form_idx-batch_size+1):
-            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv")
+            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv"))
             if df.shape[0] < MaxAssignments:
                 raise ValueError(f"The {i}th form is missing some entries in a previous batch")
-        
+            print("Form {i} {MaxAssignments}/{MaxAssignments} rows.")
         # we check batches of last run
         incomplete_forms = []
         for i in range(max_form_idx-batch_size+1,max_form_idx):
-            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv")
+            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv"))
             completion_check = df.shape[0] < MaxAssignments
             if completion_check:
                 incomplete_forms.append(i)
@@ -129,20 +130,21 @@ class MTurkparam():
     def __init__(self,
                 n_forms,
                 max_forms_per_worker,
+                MaxAssignments,
+                LifetimeInDays,
+                AutoApprovalDelayInDays,
+                AssignmentDurationInSeconds,
+                Reward,
                 production=False,
-                MaxAssignments = 10,
-                LifetimeInSeconds = 600,
-                AutoApprovalDelayInSeconds=600,
-                AssignmentDurationInSeconds=600,
-                Reward='0.01',):
+):
         """
         Args:
             hitlayout (str): hitlayout of the template to use
             lifetimeinsec (int): lifetime in seconds
         """
         self.MaxAssignments = MaxAssignments
-        self.LifetimeInSeconds = LifetimeInSeconds
-        self.AutoApprovalDelayInSeconds = AutoApprovalDelayInSeconds
+        self.LifetimeInSeconds = LifetimeInDays * 3600 * 24
+        self.AutoApprovalDelayInSeconds = AutoApprovalDelayInDays * 3600 * 24
         self.AssignmentDurationInSeconds = AssignmentDurationInSeconds
         self.Reward = Reward
         self.n_forms = n_forms
@@ -153,12 +155,13 @@ class MTurkparam():
         if self.production:
             self.qualifid = "3N5C8MI2ZCLZ0AAT5UVXEVWWHP8G22"
             self.hitlayout = "3ACG29O6JDJKYOPH2ORTS52TR57YKA"
-            self.url = "https://workersandbox.mturk.com/mturk/preview?groupId="
+            self.url = "https://worker.mturk.com/mturk/preview?groupId="
 
         else:
             self.qualifid = "3OR1BBO28PIVPWZMRDTWE8U6OZXNGN"
             self.hitlayout = "3XJFTJAV8QARKRU4KW7Q2OQT6WM9R4"
-            self.url = "https://worker.mturk.com/mturk/preview?groupId="
+            self.url = "https://workersandbox.mturk.com/mturk"
+
 
 
     def __repr__(self):
@@ -304,7 +307,6 @@ class Turker():
                         Keywords='emojis, description, sentiment, emotions',
                         Description='Describe emojis by a single accurate word',
                         QualificationRequirements=QualificationRequirements
-                        
             )
             self.hit2form[myhit['HIT']['HITId']] = idx
         self.__update_hit2form()
@@ -316,13 +318,13 @@ class Turker():
         try:
             if type(id) == str:
                 if id.isdigit():
-                    id = int(id)
+                    form_idx = int(id)
                 else:
-                    id = self.hit2form[id]
+                    form_idx = self.hit2form[id]
             gid = self.formidx2gid[id]
         except KeyError as e:
             raise KeyError("Invalid form index/ hit id")
-        path = self.formrespath.joinpath(f"{id}.csv")
+        path = self.formrespath.joinpath(f"{form_idx}.csv")
         download_drive_spreadsheet(path,gid,self.gservice,verbose=True)
         df = pd.read_csv(path)
         return df
@@ -384,7 +386,7 @@ class Turker():
         form_idx = self.hit2form[hit_id]
 
         # path where to store the results
-        form_path = FORMS_RESULTS_DIR.joinpath(f"{form_idx}.csv")
+        form_path = self.formrespath.joinpath(f"{form_idx}.csv")
 
         drive_id = self.formidx2gid[form_idx]
         # ensure we have the latest version for this given file

@@ -1,119 +1,282 @@
 🔈
-	volume:4
-	sound:3
-	speaker:3
+	speaker:19
+	sound:6
+	volume:5
+	loud:1
 🥜
-	peanut:9
+	peanut:21
+	nut:4
+	seed:1
+	nuts:1
+	hungry:1
+	redbloodcells:1
+	groundnut:1
 	peanuts:1
 😆
-	laugh:4
-	laughing:4
+	laughing:10
+	laugh:10
+	laughter:3
+	happy:2
+	smile:2
+	cheeky:1
+	disgust:1
+	lauging:1
 	lfunny:1
-	laughter:1
 📭
-	mailbox:6
-	mail:4
+	mailbox:16
+	mail:9
+	pipe:1
+	sent:1
+	letterbox:1
+	postbox:1
+	substage:1
+	post:1
 🎞️
-	film:6
-	flim:2
-	video:1
-	movie:1
+	film:13
+	movie:6
+	video:4
+	flim:3
+	cinema:2
+	roll:1
+	filmroll:1
+	videotape:1
 ☂️
-	umbrella:9
-	rain:1
+	umbrella:26
+	rain:4
+	umburella:1
 💣
-	bomb:10
+	bomb:29
+	light:1
+	ballon:1
 🛐
-	pray:4
-	worship:2
-	church:1
-	shelter:1
-	praying:1
-	prayer:1
+	pray:9
+	prayer:4
+	praying:4
+	shelter:3
+	church:3
+	worship:3
+	symbol:1
+	confessional:1
+	kneel:1
+	home:1
+	temple:1
 🌸
-	flower:9
+	flower:28
+	rose:1
+	flowet:1
 	lilly:1
 🛣️
-	highway:7
-	driving:1
-	freeway:1
+	highway:15
+	road:4
+	driving:2
+	freeway:2
+	race:2
+	roadway:1
+	roadsign:1
+	trail:1
+	pathway:1
+	trip:1
 	exit:1
 📡
-	satellite:3
-	satelite:2
-	antenna:2
-	signal:1
-	satalight:1
+	satellite:12
+	antenna:5
+	satelite:3
+	signal:2
+	transmit:1
+	alarm:1
+	symbol:1
+	speaker:1
+	dish:1
+	wifi:1
+	loud:1
 	cable:1
+	satalight:1
 👨‍💼
+	man:4
+	smiley:2
+	businessman:2
+	employee:2
 	presentation:2
+	business:1
+	accountant:1
 	stocks:1
-	teacher:1
-	businessman:1
-	happy:1
-	manager:1
-	work:1
 	office:1
-	employee:1
+	manager:1
+	teacher:1
+	happy:1
+	work:1
 🛋️
-	couch:5
-	sofa:2
-	furniture:1
-	home:1
+	couch:6
+	sofa:5
+	chair:3
+	home:2
+	soba:1
+	soffa:1
 	livingroom:1
+	furniture:1
 🥴
+	sad:3
+	confused:3
 	crazy:2
 	drunk:2
+	smiley:1
+	uglyface:1
+	woozy:1
+	sickly:1
+	feeling:1
 	sick:1
 	guilt:1
-	silly:1
 	awkward:1
-	confused:1
+	silly:1
 	nervous:1
 🖲️
-	button:5
-	space:1
+	button:7
+	bottle:3
+	lipstick:1
+	horn:1
+	spaceship:1
+	light:1
+	robot:1
+	bot:1
 	ufo:1
 	knight:1
-	bot:1
 	alien:1
+	space:1
 🤤
+	drooling:5
 	drool:3
-	drooling:3
-	vomit:1
+	smiley:2
+	facewithjollu:1
+	facewithjewl:1
+	content:1
+	hungry:1
+	overflow:1
+	droolingface:1
+	happy:1
 	funny:1
 	yum:1
-	happy:1
+	vomit:1
 ⭐
-	star:10
+	star:20
 🥘
+	pan:3
+	soup:3
+	cooking:2
+	dinner:2
+	stew:2
 	food:2
-	lunch:1
-	dinner:1
-	cook:1
-	soup:1
-	skillet:1
-	stew:1
+	pancooking:1
 	stewpot:1
+	lunch:1
 	paella:1
+	skillet:1
+	cook:1
 💊
-	pill:5
-	medicine:2
+	pill:7
+	tablet:6
+	medicine:3
+	pills:2
+	taplete:1
 	capsule:1
-	tablet:1
-	pills:1
 🔨
-	hammer:9
+	hammer:17
+	himmer:1
+	hamer:1
 	tool:1
 😮
-	wow:5
+	wow:6
+	speachlessface:2
+	surprised:2
 	shocked:2
+	smiley:1
+	exited:1
+	speechlessface:1
+	excited:1
+	surprise:1
+	suprised:1
 	ohh:1
 	exclamation:1
-	surprised:1
 📟
-	pager:5
-	calculator:2
+	pager:8
+	calculator:3
+	tablet:2
+	laptop:2
+	radio:1
+	device:1
 	card:1
 	debit:1
 	creditcard:1
+🥿
+	shoe:8
+	shoes:1
+	show:1
+	ladycutshow:1
+😔
+	sad:9
+	depressed:2
+🔽
+	down:6
+	vertical:1
+	play:1
+	downvote:1
+	triangle:1
+	icon:1
+👩
+	girl:4
+	woman:3
+	happy:2
+	female:1
+	lady:1
+📹
+	camera:5
+	video:4
+	floder:1
+	record:1
+☀️
+	sun:7
+	sunny:2
+	sunshine:2
+🍤
+	shrimp:5
+	snake:1
+	prawn:1
+	harron:1
+	snail:1
+	stretching:1
+	seafood:1
+🚥
+	traffic:3
+	signal:2
+	stoplight:2
+	traficlight:1
+	single:1
+	trafficesignal:1
+	trafficlight:1
+🎻
+	violin:5
+	guitar:4
+	cello:1
+	fiddle:1
+⌨️
+	keyboard:11
+🧙
+	wizard:7
+	joker:1
+	witch:1
+	jocker:1
+	old:1
+Age
+	33:2
+	30:2
+	47:1
+	46:1
+	31:1
+	25:1
+	34:1
+	50:1
+	32:1
+Gender
+	Male:8
+	Female:3
+Mothertongue
+	english:11

@@ -8,6 +8,14 @@ from pdb import set_trace
 from src.data.auto_drive import  download_drive_txt
 from src.constants import URL_INDEX_PATH
 import pandas as pd
+from pathlib import Path
+
+def create_batch_directories(directory,n_dirs):
+    """
+    create the directories to receive the results from the batches
+    """
+    for n in range(n_dirs):
+        directory.joinpath(str(n)).mkdir(parents=True,exist_ok=True)
 
 def limit_memory(maxsize):
     """ Prevent computer from crashing"""
@@ -230,4 +238,15 @@ def get_form_urls(service,file_id):
     formidx2url = url_index.formurl.to_dict()
     formidx2gid = url_index.resgid.to_dict()
     formidx2gid = {key:val.split("/")[-2] for key,val in formidx2gid.items()}
+    return formidx2url,formidx2gid
+
+def get_batch_form_urls(service,file_id,form_indexes):
+    """
+    returns the subpart of the formidx2url and formidx2gid
+    specific to the form_indexes passed in parameter
+    """
+    formidx2url,formidx2gid = get_form_urls(service,file_id)
+    # we limit the forms we want to treat to the one of the batch
+    formidx2url = {key:value for key,value in formidx2url.items() if key in form_indexes}
+    formidx2gid = {key:value for key,value in formidx2gid.items() if key in form_indexes}
     return formidx2url,formidx2gid

@@ -8,7 +8,7 @@ import shutil
 
 import pandas as pd
 import pickle as pk
-from src.constants import TOKEN_PATH,CREDS_PATH
+from src.constants import TOKEN_PATH,CREDS_PATH,EMOJIS2INDEXES_PATH
 import re
 
 def get_drive_service():
@@ -60,7 +60,7 @@ def download_drive_spreadsheet(csv_path,fileId,service,verbose=False):
             f.write(data)
         if verbose:
             print(f"Download 100% {csv_path}")
-        em2idx = pk.load(open("../data/processed/emojis_png/all/dic.pk","rb"))
+        em2idx = pk.load(open(EMOJIS2INDEXES_PATH,"rb"))
         idx2em = {str(value):key for key,value in em2idx.items()}
         res_df = pd.read_csv(csv_path)
         columns = res_df.columns
