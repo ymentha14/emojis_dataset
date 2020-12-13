@@ -29,7 +29,7 @@ def check_previous_batches(recent_batch_number,parent_dir,MaxAssignments,batch_s
         valid,msg = check_is_complete(batch_path,MaxAssignments,batch_size)
         if not valid:
             raise ValueError(msg)
-        print(f"All batches clean up to batch {recent_batch_number}")
+    print(f"All batches clean up to batch {recent_batch_number}")
 
 def check_is_complete(batch_path,MaxAssignments,batch_size):
     """
