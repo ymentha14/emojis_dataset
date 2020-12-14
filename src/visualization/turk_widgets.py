@@ -24,12 +24,19 @@ def get_control_panel(turk,file_id):
 
 
     appcorr = widgets.Button(description='approve_correct')
-    appcorr.on_click(lambda x:turk.approve_correct_hits(dry_run=False))
+    def f_appcorr(b):
+        turk.save_worker_infos()
+        turk.approve_correct_hits(dry_run=False)
+    appcorr.on_click(f_appcorr)
     appcorr.style.button_color = 'lightgreen'
 
 
     b_appall = widgets.Button(description='approve_all')
-    b_appall.on_click(lambda x:turk.approve_all_hits())
+    def f_appall(b):
+        turk.save_worker_infos()
+        turk.approve_all_hits()
+
+    b_appall.on_click(f_appall)
     b_appall.style.button_color = 'lightgreen'
 
     b_allass = widgets.Button(description='list assignments')

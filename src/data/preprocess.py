@@ -38,10 +38,10 @@ def check_is_complete(batch_path,MaxAssignments,batch_size):
     """
     # form indexes we expect in this batch
     batch_number = int(batch_path.stem)
-    
-    form_idxes = batchnumber2formidxes(batch_number,batch_size) 
+
+    form_idxes = batchnumber2formidxes(batch_number,batch_size)
     # extract the paths to the form files
-    form_paths = [path for path in batch_path.glob("*.csv")]
+    form_paths = [path for path in batch_path.glob("[0-9]*.csv")]
 
     # check for expected number of files
     if len(form_paths) != batch_size:
@@ -71,7 +71,7 @@ def get_batch_indexes(parent_dir,batch_number=None,batch_size=7,MaxAssignments=3
         [list of int]: indexes of the forms to run the analysis for
     """
     if batch_number is None:
-        batch_paths = [path.parent for path in FORMS_RESULTS_DIR.glob("**/*.csv")]
+        batch_paths = [path.parent for path in FORMS_RESULTS_DIR.glob("**/[0-9]*.csv")]
         if len(batch_paths) == 0:
             batch_number = 0
         else:

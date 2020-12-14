@@ -21,7 +21,7 @@ def get_emojis_voc_counts(path):
         em2vocab [dict of dict]: a dict associating each word to its count is mapped for each emoji
     """
     em2vocab = {}
-    for path in path.glob("**/*.csv"):
+    for path in path.glob("**/[0-9]*.csv"):
         df = pd.read_csv(path)
         emojis = [col for col in df.columns if col not in ["Timestamp", "Worker ID","Feedback"]]
         for em in emojis:
@@ -56,7 +56,7 @@ def display_whole_dir(directory):
     Args:
         directory (pathlib.Path): path to the directory
     """
-    for path in directory.glob("**/*.csv"):
+    for path in directory.glob("**/[0-9]*.csv"):
         df = pd.read_csv(path)
         display(df)
 
@@ -75,8 +75,14 @@ def generate_production_format(path):
         dfs = [pd.read_csv(path)]
     else:
         dfs = []
-        for path in path.glob("**/*.csv"):
+        for path in path.glob("**/[0-9]*.csv"):
+            form_id = int(path.stem)
             df = pd.read_csv(path)
+            df['FormId'] = form_id
+            df.rename(columns={'Worker ID':'WorkerId'},inplace=True)
+            winfo_path = path.parent.joinpath("workers_info.csv")
+            winfo = pd.read_csv(winfo_path)
+            df = pd.merge(df,winfo,how='left',on=['WorkerId','FormId'])
             dfs.append(df)
         if len(dfs) == 0:
             raise ValueError(f"No .csv file was found in the subdirectories of {path}")
@@ -90,11 +96,14 @@ def generate_production_format(path):
         # get rid of the honeypot
         del em_cols[honey_col_idx]
         for _,row in df.iterrows():
-            wid = row['Worker ID']
+            wid = row['WorkerId']
+            formid = row['FormId']
+            duration = row['AnswerDurationInSeconds']
             for em,word in row[em_cols].iteritems():
                 # we add the selected emojis index
                 emoji_index = selem2indx[em]
-                data.append((wid,emoji_index,em,word))
-    data = (pd.DataFrame(data,columns=['Worker ID','emoji_index','emoji','word'])
+                data.append((wid,formid,duration,emoji_index,em,word))
+    data = (pd.DataFrame(data,columns=['Worker ID','FormId','Duration','emoji_index','emoji','word'])
                 .sort_values('emoji_index'))
+
     return data
