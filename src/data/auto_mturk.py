@@ -321,7 +321,7 @@ class Turker():
                     form_idx = int(id)
                 else:
                     form_idx = self.hit2form[id]
-            gid = self.formidx2gid[id]
+            gid = self.formidx2gid[form_idx]
         except KeyError as e:
             raise KeyError("Invalid form index/ hit id")
         path = self.formrespath.joinpath(f"{form_idx}.csv")
