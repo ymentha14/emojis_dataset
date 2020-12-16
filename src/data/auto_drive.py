@@ -10,6 +10,7 @@ import pandas as pd
 import pickle as pk
 from src.constants import TOKEN_PATH,CREDS_PATH,EMOJIS2INDEXES_PATH
 import re
+from pdb import set_trace
 
 def get_drive_service():
     """
@@ -72,7 +73,7 @@ def download_drive_spreadsheet(csv_path,fileId,service,verbose=False):
             else:
                 columns_renamed.append(field)
         res_df.columns = columns_renamed
-        
+
         res_df.to_csv(csv_path,index=False)
     else:
         raise ValueError("Empty file")

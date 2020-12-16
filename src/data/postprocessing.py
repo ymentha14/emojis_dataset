@@ -91,7 +91,8 @@ def generate_production_format(path):
     data = []
     for df in tqdm(dfs):
         em_cols = [col for col in df.columns if col in EMOJIS]
-        honey_col_idx = len(em_cols) // 2
+        n = len(em_cols)
+        honey_col_idx = n // 2 - (n+1) %2
         assert(em_cols[honey_col_idx] in HONEYPOTS.keys())
         # get rid of the honeypot
         del em_cols[honey_col_idx]
