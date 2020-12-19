@@ -75,7 +75,7 @@ def get_batch_indexes(parent_dir,batch_number=None,batch_size=7,MaxAssignments=3
         if len(batch_paths) == 0:
             batch_number = 0
         else:
-            recent_batch_dir = max(batch_paths,key = lambda x:x.stem)
+            recent_batch_dir = max(batch_paths,key = lambda x:int(x.stem))
             recent_batch_number = int(recent_batch_dir.stem)
             check_previous_batches(recent_batch_number,parent_dir,MaxAssignments,batch_size)
 

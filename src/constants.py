@@ -90,7 +90,9 @@ TOKEN_PATH = CREDS_PATH.joinpath("token.pk")  # token for drive API
 # path to the downloaded urls form
 WATCHER_PATH = REPO_PATH.joinpath("src/data/watcher.py")
 URL_INDEX_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/url_index.txt")
-FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_results/")
+FORMS_RESULTS_DIR = Path("/dlabdata1/emojis/forms_results/")
+if not FORMS_RESULTS_DIR.exists():
+    FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_results/")
 WATCHER_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/watcher_forms_results/")
 HIT2FORM_PATH_SANDBOX = REPO_PATH.joinpath("data/processed/auto_mturk/hit2formsandbox.pk")
 HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")

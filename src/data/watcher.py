@@ -18,7 +18,7 @@ class Watcher():
     def __init__(self,form_results_dir,
                     formidx2gid,
                     drive_service,
-                    max_forms=2,
+                    max_forms=50,
                     production=False):
         """
         Args:
@@ -38,7 +38,7 @@ class Watcher():
         self.formidx2gid = formidx2gid
         self.drive_service = drive_service
 
-    def get_workers2tag(self):
+    def get_workers_count(self):
         """
         Return the set of workerid that need to get tagged
         """
@@ -52,6 +52,10 @@ class Watcher():
         meta_df = pd.concat(meta_df,axis=0)
         # number of different
         forms_count = meta_df['Worker ID'].value_counts()
+        return forms_count
+
+    def get_workers2tag(self):
+        forms_count = self.get_workers_count()
         forms_count = forms_count[forms_count >= self.max_forms]
         return set(forms_count.index.tolist())
 

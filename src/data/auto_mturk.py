@@ -72,55 +72,6 @@ def clean_own_worker(client,QualificationTypeId):
     except:
         print("Worker already clean")
 
-def get_batch_indexes(parent_dir,batch_number=None,batch_size=7,MaxAssignments=30):
-    """
-    Function to batch formidx2gid and formidx2url
-
-    Args:
-        batch_size(int): number of forms per batch
-        batch_number(int): number of the batch to get indexes for
-
-    Return:
-        [list of int]: indexes of the forms to run the analysis for
-    """
-    if batch_number is None:
-        if len(list(parent_dir.glob("**/*.csv"))) == 0:
-            print("Starting first batch")
-            return 0,list(range(0,batch_size))
-        max_form_idx = max([int(path.stem) for path in FORMS_RESULTS_DIR.glob("**/*.csv")])
-
-        if((max_form_idx+1) % batch_size != 0):
-            raise ValueError("Problem of downloading: missing form csv files")
-
-        # we check all the batches from previous runs
-        for i in range(max_form_idx-batch_size+1):
-            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv"))
-            if df.shape[0] < MaxAssignments:
-                raise ValueError(f"The {i}th form is missing some entries in a previous batch")
-            print("Form {i} {MaxAssignments}/{MaxAssignments} rows.")
-        # we check batches of last run
-        incomplete_forms = []
-        for i in range(max_form_idx-batch_size+1,max_form_idx):
-            df = pd.read_csv(FORMS_RESULTS_DIR.joinpath(f"{i}.csv"))
-            completion_check = df.shape[0] < MaxAssignments
-            if completion_check:
-                incomplete_forms.append(i)
-
-        # we did not finish the last run yet
-        if any(incomplete_forms):
-            batch_number = max_form_idx // batch_size -1
-            start_idx = max_form_idx - batch_size + 1
-            print(f"Last run did not finish for indexes {incomplete_forms}: resuming batch number {batch_number}")
-
-        # last run finished successfully, we pass to the next batch
-        else:
-            batch_number = max_form_idx // batch_size
-            start_idx = max_form_idx+1
-            print(f"New run: starting batch number {batch_number}")
-    else:
-        start_idx = batch_number * batch_size
-    forms_idxes = list(range(start_idx,start_idx+batch_size))
-    return batch_number,forms_idxes
 
 def get_answer(answer):
         xml_doc = xmltodict.parse(answer)
@@ -236,7 +187,8 @@ class Turker():
                 row['FormIdx'] = self.hit2form.get(hitid,9999)
                 row['HITId'] = hitid
                 row['Status'] = hit['HITStatus']
-                comp = self.client.list_assignments_for_hit(HITId=hitid, AssignmentStatuses=['Submitted','Approved','Rejected'])['NumResults']
+                # TODO: raise maxResults to inf
+                comp = self.client.list_assignments_for_hit(HITId=hitid,MaxResults=100,AssignmentStatuses=['Submitted','Approved','Rejected',])['NumResults']
                 row['Completed'] = comp
                 maxo = hit["MaxAssignments"]
                 row['Percent_completed'] = int(comp / maxo*100)
@@ -330,7 +282,7 @@ class Turker():
         return df
 
     def list_assignments(self,hit_id):
-        worker_results = self.client.list_assignments_for_hit(HITId=hit_id, AssignmentStatuses=['Submitted','Approved','Rejected'])
+        worker_results = self.client.list_assignments_for_hit(HITId=hit_id, MaxResults=100,AssignmentStatuses=['Submitted','Approved','Rejected'])
         if worker_results['NumResults'] > 0:
             df = []
             for assignment in worker_results['Assignments']:
@@ -387,13 +339,16 @@ class Turker():
         Args:
             correct_hits (Bool): whether to correct correct hits exclusively
         """
-        assignments = self.client.list_assignments_for_hit(HITId=hit_id,AssignmentStatuses=['Submitted'])
-        assignments = assignments['Assignments']
-        for assignment in assignments:
-            ass_id = assignment['AssignmentId']
-            # TODO: assignment['AcceptTime'/'SubmitTime']
-            print(f"Approving assignment {ass_id}")
-            self.client.approve_assignment(AssignmentId=ass_id)
+        while True:
+            assignments = self.client.list_assignments_for_hit(HITId=hit_id,MaxResults=100,AssignmentStatuses=['Submitted','Rejected'])
+            assignments = assignments['Assignments']
+            # Mturk limits the number of assignments in the function list_assignments_for_hit
+            if len(assignments) == 0:
+                break
+            for assignment in assignments:
+                ass_id = assignment['AssignmentId']
+                print(f"Approving assignment {ass_id}")
+                self.client.approve_assignment(AssignmentId=ass_id)
 
     def approve_correct_assignments(self,hit_id,dry_run = False):
         """
