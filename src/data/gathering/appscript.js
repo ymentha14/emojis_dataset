@@ -2,12 +2,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////// CONSTANTS /////////////////////////////////////////////////////////////////////////////////////////////
 var N_FORMS = 133 //final number of forms
-var N_FORMS_DEBUG = 2 //number of forms to keep for debugging
-var N_EMOJIS = 7;  // number of emojis to keep in debug mode (delete for production)
+var N_FORMS_DEBUG = 3 //number of forms to keep for debugging
 var SELECTED_INDEXES_URL = "https://docs.google.com/document/d/1P7q1hgBrlRqpnATcnHZxMrlRuKzxQx0pj3ab4iqexYM/edit"; // id of a gdoc containing the indexes of the selected emojis
-var HONEX_POTS_INDEXES = [3006,3091,2897,1244,2282,451,2283,2280,613,387,740,428,597,3059,1284,444,2528,2640,2885,1095,2533,828,699,2979,827] // index of the honeypots emojis
+var HONEY_POTS_INDEXES = [3006, 3091, 2897, 2282, 451, 2280, 613, 387, 740, 597, 846, 3059, 1284, 444, 2528, 2640, 2885, 1095, 2533, 828, 699] // index of the honeypots emojis
 var FORM_DESC_URL = "https://docs.google.com/document/d/1Lw4uUvqNk3zgijdvszpcR7L5FF4eC7AQREIoFHrvsKM/edit"; // id of the gdoc containing the description of the form
 var IDX2URL_FILENAME = "forms_url.txt"
+var FEEDBACK_HELP_TEXT = "You can optionally give us feedback about the HIT. We value your feedback as it allows us to improve our surveys. The feedback can concern anything about the Google form or the MTurk HIT."
+var WORKERID_HELP_TEXT = "Enter your worker id here: IMPORTANT make sure it is correctly spelled as this will allow us to map your work to your mturk account and validate your HIT."
 var CONFIRMATION_MSG = `
 🎉🎉Thank you for completing our survey!🎉🎉
 Here is your MTurk completion code. Either copy-paste it or enter the 3 numbers with no space in the required field on the mturk HIT page you come from.
@@ -122,6 +123,50 @@ function insert_in_middle(array,element) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////// EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
+function add_demographic(form,title_base){
+  
+  // Demographic
+  form.addSectionHeaderItem()
+  .setTitle("User informations")
+  .setHelpText("If you already provided your user information (Age, Gender, and Mothertongue) in a previous HIT '" + title_base + "', you can leave it blank.");
+  
+  // Age
+  var agevalidation = FormApp.createTextValidation()
+  .requireTextMatchesPattern("^[0-9]{2}$")
+  .setHelpText('Only digits for the age (ex: "26")')
+  .build();
+  
+  form.addTextItem()
+  .setTitle("Age")
+  .setHelpText("Your age")
+  .setValidation(agevalidation)
+  .setRequired(false)
+
+  // Gender  
+  var genderitem = form.addMultipleChoiceItem()
+  genderitem.setTitle("Gender")
+  .setChoices([
+        genderitem.createChoice('Male'),
+        genderitem.createChoice('Female'),
+        genderitem.createChoice('Other')
+     ])
+  .setHelpText("Your gender")
+  .setRequired(false)
+ 
+  // Mothertongue
+  var lanvalidation = FormApp.createTextValidation()
+  .requireTextMatchesPattern("^[a-z]+$")
+  .setHelpText('only lowercase letters (ex: english)')
+  .build();
+  
+  form.addTextItem()
+  .setTitle("Mothertongue")
+  .setHelpText("Your mothertongue")
+  .setValidation(lanvalidation)
+  .setRequired(false)
+  
+}
+
 function create_em_field(em_code,form,singleForm=False){
   /**
  * Summary. (use period)
@@ -155,7 +200,7 @@ function create_em_field(em_code,form,singleForm=False){
   .build();
 
   form.addTextItem()
-  .setTitle(em_code.toString())
+  .setTitle(em_code.toString() + " (emoji above)")
   .setRequired(true)
   .setValidation(validation);
 }
@@ -171,10 +216,11 @@ function createForm(emojis_codes,formidx,opt_title="",singleForm=false) {
   */
 
   // Title and description
+  var title_base = "Test Form "
   if (singleForm){
-    var title = "Test Form "+ formidx + opt_title;
+    var title = title_base + formidx + opt_title;
     } else {
-      var title = "Test Form "+ " three words " +formidx + opt_title;
+      var title = title_base + " three words " +formidx + opt_title;
     }
   var desc = read_gdoc(FORM_DESC_URL)
 
@@ -186,24 +232,37 @@ function createForm(emojis_codes,formidx,opt_title="",singleForm=false) {
   // Worker ID
   var item = "Worker ID"
   var validation = FormApp.createTextValidation()
-  .requireTextMatchesPattern("^[A-Z0-9]*$")
+  .requireTextMatchesPattern("^A[A-Z0-9]+$")
   .setHelpText('MTurk Ids are exclusivels cap letters and numbers.')
   .build();
 
   form.addTextItem()
   .setTitle(item)
   .setRequired(true)
-  .setValidation(validation);
-
+  .setValidation(validation)
+  .setHelpText(WORKERID_HELP_TEXT)
+  ;
+  
+  // Demographic infos
+  add_demographic(form,title_base)
+ 
   // Subtitle
-  form.addSectionHeaderItem().setTitle("Questions")
+  form.addSectionHeaderItem()
+  .setTitle("Questions")
 
   // Honeypot 
-  var honey_emoji_idx = HONEX_POTS_INDEXES[formidx % HONEX_POTS_INDEXES.length]
+  // TODO: ensure the honeypot is not already present in the form
+  var honey_emoji_idx = HONEY_POTS_INDEXES[formidx % HONEY_POTS_INDEXES.length]
   emojis_codes =  insert_in_middle(emojis_codes,honey_emoji_idx)
   
   // Emojis Fields
   emojis_codes.forEach(em_code => create_em_field(em_code,form,singleForm))
+  
+  // Feedback field
+  form.addTextItem()
+  .setTitle("Feedback")
+  .setHelpText(FEEDBACK_HELP_TEXT)
+  .setRequired(false)
 
   // Completion
   var password = generate_password(formidx);
@@ -222,8 +281,13 @@ function createForm(emojis_codes,formidx,opt_title="",singleForm=false) {
   short_url = formidx.toString() + "," + short_url + "," + res_url
   createorappend2file(formidx,IDX2URL_FILENAME,short_url)
 }
-///////////////////////////////////////////////////////////////////////////////////////////// END EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////You can optionally provide us with a feeback concerning the HIT: we value these feedbacks as they allow us to improve our surveys. The feedback can concern anything about the google forms/ Mturk hit.//////////////////////////////////////////////////////////////////// END EMOJIS FUNCTIONS /////////////////////////////////////////////////////////////////////////////////////////////
 
+function create_honey_forms() {
+  var form_idx = 4
+  emojis_codes = chunkify(HONEY_POTS_INDEXES,2,true)
+  emojis_codes.map(function(chunk,i) {return createForm(chunk,i,"",true)})
+};
 
 function create_random_forms() {
   var next_form_idx = get_next_form_idx();
@@ -246,3 +310,4 @@ function create_single_form() {
   emojis_codes = emojis_codes.slice(form_idx,form_idx+1)
   emojis_codes.map(function(chunk,i) {return createForm(chunk,i+next_form_idx,"",true)})
 };
+
