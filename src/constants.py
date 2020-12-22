@@ -75,19 +75,19 @@ E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
 W2V_PATH = str(REF_PATH.joinpath('data/word2vec/GoogleNews-vectors-negative300.bin'))
 DATA_PATH = str(REF_PATH.joinpath("data/raw_training_data/emoji_joined.txt"))
 
-REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emojivec")
+REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emoji_dataset")
 if not REPO_PATH.exists():
     REPO_PATH = Path("/home/ymentha/emojivec")
-TWEET_PATH = REPO_PATH.joinpath("data/raw/tweets/big_tweet.csv")
-TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
 
+
+############################## MT2GF ##############################
 
 # Credentials Directory
 CREDS_PATH = REPO_PATH.joinpath("creds")
 AWS_KEYS_PATH = CREDS_PATH.joinpath("aws.txt")  # keys for AWS
 TOKEN_PATH = CREDS_PATH.joinpath("token.pk")  # token for drive API
 
-# path to the downloaded urls form
+# Path to the downloaded urls form
 WATCHER_PATH = REPO_PATH.joinpath("src/data/watcher.py")
 URL_INDEX_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/url_index.txt")
 FORMS_RESULTS_DIR = Path("/dlabdata1/emojis/forms_results/")
@@ -97,13 +97,31 @@ WATCHER_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/watche
 HIT2FORM_PATH_SANDBOX = REPO_PATH.joinpath("data/processed/auto_mturk/hit2formsandbox.pk")
 HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")
 LOG_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_log_results")
+##################################################################
+
+
+
+
+
+
 # Em2Png
 PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
-EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/processed/emojis_png/pickles/dic.pk")
+EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/raw/emojis_png/pickles/emojis2globindex.pk")
 SELECTED_EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/processed/emojis_png/pickles/seldic.pk")
 ########################################################
 
+# Tweeter Data
+TWEET_DIR = REPO_PATH.joinpath("data/raw/tweets/")
+TWEET_EM_COUNT_PATH = TWEET_DIR.joinpath("em_counts.csv")
+TWEET_PATH = TWEET_DIR.joinpath("tweet_600.csv")
+TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
 
+
+# Google Forms Data
+FORMS_DIR = REPO_PATH.joinpath("data/raw/forms")
+PILOTS_DIR = FORMS_DIR.joinpath("pilots")
+PILOT_0_DIR = PILOTS_DIR.joinpath("0_emoji10")
+PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
 
 
 # AutoMTurk
