@@ -69,7 +69,7 @@ sex_symbols = ["\u2640","\u2642","\u2640\ufe0f","\u2642\ufe0f"]
 
 
 #################### Path Constants ####################
-REF_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emoji2vec_working/")
+REF_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emoji_dataset/emoji2vec/emoji2vec/")
 MAPPING_PATH = str(REF_PATH.joinpath('emoji_mapping.p'))
 E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
 W2V_PATH = str(REF_PATH.joinpath('data/word2vec/GoogleNews-vectors-negative300.bin'))

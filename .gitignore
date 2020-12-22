@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+emoji2vec/
 data/raw/tweets/
 build/
 develop-eggs/
@@ -56,7 +57,7 @@ docs/_build/
 
 # PyBuilder
 target/
-
+jupy_ext/
 # DotEnv configuration
 .env
 

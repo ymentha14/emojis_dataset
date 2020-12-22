@@ -1,3 +1,14 @@
+"""
+Fraudulous users detection
+
+As many ways exist for a user input to be invalid (garbage repeated input, random words answering etc)
+One need to either
+    (1): perform a workers selection on-the-fly (possible with mt2gf)
+    (2): accept all data in a first time and filter it afterwards
+The second option was chosen for the emojis dataset: this file contains the functions to filter out such
+fraudulous inputs
+"""
+
 import pickle as pk
 from src.constants import emotions_faces,REF_PATH,MAPPING_PATH, E2V_PATH, W2V_PATH, DATA_PATH
 import sys
@@ -26,7 +37,7 @@ def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
     Returns the worker_ids of the workers who did not manage to find the honeypots
 
     Args:
-        form_df (pd.df): as saved by download_all_csv_results
+        form_df (pd.df): as saved by download_multi_emoji_csv
         dist_lshteing (int): distance tolerated to accept a honeypot
     """
     assert(form_df['Worker ID'].is_unique)

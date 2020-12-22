@@ -10,33 +10,10 @@ from src.constants import URL_INDEX_PATH
 import pandas as pd
 from pathlib import Path
 
-def create_batch_directories(directory,n_dirs):
-    """
-    create the directories to receive the results from the batches
-    """
-    for n in range(n_dirs):
-        directory.joinpath(str(n)).mkdir(parents=True,exist_ok=True)
-
 def limit_memory(maxsize):
     """ Prevent computer from crashing"""
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
     resource.setrlimit(resource.RLIMIT_AS, (maxsize, maxsize))
-
-
-def read_access_keys(file_path):
-    """
-    Read the AWS keys at the given file_path
-
-    Args:
-        file_path (str): path to the AWS access key file
-
-    Return
-        [str],[str]: the access key and the secret access key
-    """
-    with open(file_path,"r") as f:
-        aws_access_key_id = f.readline().strip("\n")
-        aws_secret_access_key = f.readline().strip("\n")
-    return aws_access_key_id,aws_secret_access_key
 
 
 def extract_emojis(text,find_tone=False):
@@ -232,21 +209,5 @@ def generate_password(i):
     return str(a)[:3]
 
 
-def get_form_urls(service,file_id):
-    download_drive_txt(URL_INDEX_PATH,file_id,service)  # download the most recent url_index
-    url_index = pd.read_csv(URL_INDEX_PATH,sep=",",header=None,names=['formurl','resgid'])
-    formidx2url = url_index.formurl.to_dict()
-    formidx2gid = url_index.resgid.to_dict()
-    formidx2gid = {key:val.split("/")[-2] for key,val in formidx2gid.items()}
-    return formidx2url,formidx2gid
 
-def get_batch_form_urls(service,file_id,form_indexes):
-    """
-    returns the subpart of the formidx2url and formidx2gid
-    specific to the form_indexes passed in parameter
-    """
-    formidx2url,formidx2gid = get_form_urls(service,file_id)
-    # we limit the forms we want to treat to the one of the batch
-    formidx2url = {key:value for key,value in formidx2url.items() if key in form_indexes}
-    formidx2gid = {key:value for key,value in formidx2gid.items() if key in form_indexes}
-    return formidx2url,formidx2gid
+
