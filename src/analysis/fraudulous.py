@@ -14,7 +14,7 @@ import pickle as pk
 from src.constants import emotions_faces,REF_PATH,MAPPING_PATH, E2V_PATH, W2V_PATH, DATA_PATH
 import sys
 sys.path.append("../../emoji2vec_working/")
-from src.data.form10_eda import *
+from src.exploration.form10_eda import *
 import seaborn as sns
 import numpy as np
 from src.constants import COLOR_FRAUD,COLOR_TRUE

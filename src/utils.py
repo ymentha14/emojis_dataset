@@ -5,7 +5,6 @@ from src.constants import skin_tones, em_letters, EMOJIS,man_woman,FE0F_DICT,sex
 
 from copy import copy
 from pdb import set_trace
-from src.data.auto_drive import  download_drive_txt
 from src.constants import URL_INDEX_PATH
 import pandas as pd
 from pathlib import Path
