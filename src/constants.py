@@ -82,6 +82,12 @@ if not REPO_PATH.exists():
 
 ############################## MT2GF ##############################
 
+# Drive id of the gmap object
+GMAP_DRIVE_ID = "1o_7rRLn48ZRHlo0x_8gNILbae_4q-DbB1WneuKaRFI0"
+
+# QualityCheck Directory
+QUALITY_CHECK_DIR = REPO_PATH.joinpath("data//mt2gf_cache/quality_check")
+
 # Credentials Directory
 CREDS_PATH = REPO_PATH.joinpath("creds")
 AWS_KEYS_PATH = CREDS_PATH.joinpath("aws.txt")  # keys for AWS

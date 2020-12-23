@@ -25,7 +25,7 @@ def get_emojis_voc_counts(path):
     em2vocab = {}
     for path in path.glob("**/[0-9]*.csv"):
         df = pd.read_csv(path)
-        emojis = [col for col in df.columns if col not in ["Timestamp", "Worker ID","Feedback"]]
+        emojis = [col for col in df.columns if col not in ["Timestamp", "WorkerID","Feedback"]]
         for em in emojis:
             vocab = em2vocab.get(em,{})
             for word,count in df[em].value_counts().iteritems():
@@ -81,7 +81,7 @@ def generate_production_format(path):
             form_id = int(path.stem)
             df = pd.read_csv(path)
             df['FormId'] = form_id
-            df.rename(columns={'Worker ID':'WorkerId'},inplace=True)
+            df.rename(columns={'WorkerID':'WorkerId'},inplace=True)
             winfo_path = path.parent.joinpath("workers_info.csv")
             winfo = pd.read_csv(winfo_path)
             df = pd.merge(df,winfo,how='left',on=['WorkerId','FormId'])
@@ -106,7 +106,7 @@ def generate_production_format(path):
                 # we add the selected emojis index
                 emoji_index = selem2indx[em]
                 data.append((wid,formid,duration,emoji_index,em,word))
-    data = (pd.DataFrame(data,columns=['Worker ID','FormId','Duration','emoji_index','emoji','word'])
+    data = (pd.DataFrame(data,columns=['WorkerID','FormId','Duration','emoji_index','emoji','word'])
                 .sort_values('emoji_index'))
 
     return data

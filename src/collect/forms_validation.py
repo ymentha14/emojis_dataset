@@ -21,7 +21,7 @@ def quality_check(quality_check_dir):
         df = pd.read_csv(path)
         cols = df.columns.tolist()
         assert(cols[0] == "Timestamp")
-        assert(cols[1] == "Worker ID")
+        assert(cols[1] == "WorkerID")
         assert(cols[2] == "Age")
         assert(cols[3] == "Gender")
         assert(cols[4] == "Mothertongue")
@@ -46,4 +46,4 @@ def quality_check(quality_check_dir):
     if selected_emojis != em_retrieved:
         raise ValueError(f"Missing emojis: {selected_emojis - em_retrieved} ")
     else:
-        print("All emojis are present")
+        print("Forms in right format: \n**All emojis are present\n**Honeypots well placed")

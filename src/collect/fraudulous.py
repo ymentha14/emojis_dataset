@@ -27,9 +27,9 @@ def detect_repeat_frauders(form_df,threshold=0.8):
     Detect the fraudulous workers i.e. the one who repeated the same word too many times
     """
     form_df = form_df.copy()
-    columns = [col for col in form_df.columns if col not in ['Timestamp','Worker ID']]
+    columns = [col for col in form_df.columns if col not in ['Timestamp','WorkerID']]
     form_df['vocsize'] = form_df[columns].apply(lambda x: len(set(x)),axis=1)
-    fraud_workers = form_df[form_df['vocsize'] < threshold * len(columns)]['Worker ID'].values.tolist()
+    fraud_workers = form_df[form_df['vocsize'] < threshold * len(columns)]['WorkerID'].values.tolist()
     return set(fraud_workers)
 
 def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
@@ -40,8 +40,8 @@ def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
         form_df (pd.df): as saved by download_multi_emoji_csv
         dist_lshteing (int): distance tolerated to accept a honeypot
     """
-    assert(form_df['Worker ID'].is_unique)
-    form_df = form_df.set_index('Worker ID').copy()
+    assert(form_df['WorkerID'].is_unique)
+    form_df = form_df.set_index('WorkerID').copy()
     honey_columns = [em for em in form_df.columns if em in honeypots.keys()]
     form_df = form_df[honey_columns]
     assert(form_df.shape[1] > 0)
@@ -61,7 +61,7 @@ def get_wrong_honey_entries(form_df,honeypots,dist_lshtein=2):
     Return:
         [pd.df]: same df with honey frauders entries exclusively
     """
-    form_df = form_df.set_index('Worker ID').copy()
+    form_df = form_df.set_index('WorkerID').copy()
     honey_columns = [em for em in form_df.columns if em in honeypots.keys()]
     form_df = form_df[honey_columns]
     assert(form_df.shape[1] > 0)

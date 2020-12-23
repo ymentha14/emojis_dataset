@@ -19,7 +19,7 @@ def read_form(path):
     Read the .csv file as returned by the google form
     """
     form_df = (pd.read_csv(path)
-              .set_index('Worker ID'))
+              .set_index('WorkerID'))
     form_df = form_df.rename(columns={col_name:col_name.strip() for col_name in form_df.columns})
     if "Timestamp" in form_df.columns:
         form_df.drop(columns=["Timestamp"],inplace=True)
