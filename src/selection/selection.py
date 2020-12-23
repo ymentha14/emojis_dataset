@@ -21,7 +21,7 @@ import warnings
 import pickle as pk
 from numpy.random import permutation
 import pdb, traceback, sys
-from src.constants import TWEET_PATHS_PATH,TWEET_PATH
+from src.constants import TWEET_PATHS_PATH,TWEET_PATH,TWEET_SAMPLES_DIR
 
 
 warnings.filterwarnings('ignore')
@@ -52,7 +52,10 @@ def load_or_compute_tweetpaths(tweetpaths_path):
         tweet_paths = pk.load(open(tweetpaths_path,"rb"))
     else:
         print("Computing paths structure")
-        main_path = Path("/dlabdata1/gligoric/spritzer/tweets_pritzer_sample/")
+        main_path = TWEET_SAMPLES_DIR
+        if not main_path.exists():
+            raise ValueError("You need to be on the DLab machine to run the Tweeter function")
+
         subpaths = np.random.permutation(list(main_path.iterdir()))
         # we are only interested in the twitter_stream directories
         subpaths = [path for path in subpaths if path.stem.startswith("twitter_stream")]
@@ -92,7 +95,7 @@ def compute_twitter_data(save_path,N_LIM=30000,seed=15):
         new_tweets = []
         try:
             with bz2.open(tweet_path, "rt") as bzinput:
-                for line in bzinput: 
+                for line in bzinput:
                     try:
                         tweet = json.loads(line)
                     except json.JSONDecodeError:
@@ -165,7 +168,7 @@ def compute_emdf(path,tweet_df):
     em_df.to_csv(path)
     return em_df
 
-def load_or_compute_emdf(em_path,tweet_path=None):
+def load_or_compute_em_df(em_path,tweet_path=None):
     """
     load or compute the em_df depending if the provided path exists or not
 

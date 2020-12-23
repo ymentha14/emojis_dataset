@@ -105,13 +105,25 @@ LOG_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_log_
 
 
 # Em2Png
-PNG_PATH = REPO_PATH.joinpath("data/processed/emojis_png/all/")
-EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/raw/emojis_png/pickles/emojis2globindex.pk")
-SELECTED_EMOJIS2INDEXES_PATH = REPO_PATH.joinpath("data/processed/emojis_png/pickles/seldic.pk")
+
+PNG_DIR = REPO_PATH.joinpath("data/raw/emojis_png/")
+
+# Extracted images for all emojis
+PNG_PATH = PNG_DIR.joinpath("all")
+# List of selected emojis for dataset collection
+SELECTED_EMOJIS_PATH = PNG_DIR.joinpath("pickles/selected_emojis.pk")
+# Mapping of all emojis to a global index
+EMOJI_2_GLOBAL_INDEX_PATH = PNG_DIR.joinpath("pickles/emojis_2_global_index.pk")
+# Global indexes of selected emojis for dataset collection
+SELECTED_GLOBAL_INDEXES_PATH = PNG_DIR.joinpath("pickles/selected_global_indexes.pk")
+# Mapping of selected emojis to a selected index
+EMOJI_2_TOP_INDEX_PATH = PNG_DIR.joinpath("pickles/emojis_2_top_indexes.pk")
 ########################################################
 
 # Tweeter Data
 TWEET_DIR = REPO_PATH.joinpath("data/raw/tweets/")
+# Directory where to find all the tweeter samples
+TWEET_SAMPLES_DIR = Path("/dlabdata1/gligoric/spritzer/tweets_pritzer_sample/")
 TWEET_EM_COUNT_PATH = TWEET_DIR.joinpath("em_counts.csv")
 TWEET_PATH = TWEET_DIR.joinpath("tweet_600.csv")
 TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")

@@ -6,7 +6,7 @@ functions to extract relevant statistics and plots from the gathered data
 from IPython.display import display
 import pandas as pd
 from tqdm import tqdm
-from src.constants import SELECTED_EMOJIS2INDEXES_PATH
+from src.constants import EMOJI_2_TOP_INDEX_PATH
 from src.constants import EMOJIS
 from src.constants import HONEYPOTS
 import pickle as pk
@@ -89,7 +89,7 @@ def generate_production_format(path):
         if len(dfs) == 0:
             raise ValueError(f"No .csv file was found in the subdirectories of {path}")
 
-    selem2indx = pk.load(open(SELECTED_EMOJIS2INDEXES_PATH,"rb"))
+    selem2indx = pk.load(open(EMOJI_2_TOP_INDEX_PATH,"rb"))
     data = []
     for df in tqdm(dfs):
         em_cols = [col for col in df.columns if col in EMOJIS]

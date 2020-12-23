@@ -6,7 +6,7 @@ formed and useable
 """
 
 import pandas as pd
-from src.constants import EMOJIS,HONEYPOTS,FORMS_RESULTS_DIR,SELECTED_EMOJIS2INDEXES_PATH
+from src.constants import EMOJIS,HONEYPOTS,FORMS_RESULTS_DIR,EMOJI_2_TOP_INDEX_PATH
 import pickle as pk
 
 def quality_check(quality_check_dir):
@@ -40,7 +40,7 @@ def quality_check(quality_check_dir):
         em_retrieved.update(em_cols)
 
     # check whether we covered all emojis
-    selected_emojis = pk.load(open(SELECTED_EMOJIS2INDEXES_PATH,"rb"))
+    selected_emojis = pk.load(open(EMOJI_2_TOP_INDEX_PATH,"rb"))
     selected_emojis = set(selected_emojis.keys())
 
     if selected_emojis != em_retrieved:
