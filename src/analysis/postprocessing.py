@@ -6,26 +6,29 @@ functions to extract relevant statistics and plots from the gathered data
 from IPython.display import display
 import pandas as pd
 from tqdm import tqdm
-from src.constants import EMOJI_2_TOP_INDEX_PATH
-from src.constants import EMOJIS
-from src.constants import HONEYPOTS
+from src.constants import EMOJIS,HONEYPOTS,EMOJI_2_TOP_INDEX_PATH,LANGUAGES_PATH
 import pickle as pk
+from pdb import set_trace
+import Levenshtein
+from pathlib import Path
+import matplotlib.pyplot as plt
 
 def get_emojis_voc_counts(path):
     """
-    Generate a value count of words for all emojis present in csv files of the path
-    provided in parameter
+    Generate a value count of words for every emoji present in the csv files
+    found in the child directories of "path"
 
     Args:
-        path (pathlib.Path): parent path of the csv files
+        path (str): parent path of the csv files
 
     Return:
         em2vocab [dict of dict]: a dict associating each word to its count is mapped for each emoji
     """
+    path = Path(path)
     em2vocab = {}
     for path in path.glob("**/[0-9]*.csv"):
         df = pd.read_csv(path)
-        emojis = [col for col in df.columns if col not in ["Timestamp", "WorkerID","Feedback"]]
+        emojis = [col for col in df.columns if col in EMOJIS]
         for em in emojis:
             vocab = em2vocab.get(em,{})
             for word,count in df[em].value_counts().iteritems():
@@ -62,36 +65,114 @@ def display_whole_dir(directory):
         df = pd.read_csv(path)
         display(df)
 
-def generate_production_format(path):
+def parse_language(target_word,word_list):
+    """
+    Find the closest language match to target_word in terms of Levenshtein distance in word_list
+    
+    Args:
+        target_word (str): user input for "mothertongue"
+        word_list (str): list of official languages
+    
+    Returns:
+        [str]: closest match / None if the levenshtein distance is >4
+    """
+    if target_word is None:
+        return None
+    if target_word == "en":
+        return "english"
+    distances = [(word,Levenshtein.distance(target_word,word)) for word in word_list]
+    best_word,min_dist = min(distances,key=lambda x: x[1])
+    check_pairs = [pair[0] for pair in distances if pair[1] == min_dist ]
+    if len(check_pairs) > 1:
+        raise ValueError(f"Two words of the list are at equal distance! {check_pairs}")
+    if min_dist > 4:
+        return None
+    return best_word
+
+def build_worker_info_table(input_directory,output_dir=None,verbose=False):
+    """
+    Gather and clean the demographic information about workers and save it in the output directory.
+    
+    Args:
+        input_directory (str): parent directory in which the function will recursively find the csv files
+        output_path (str): path where to store the workers info table
+    """
+    input_directory = Path(input_directory)
+    worker_infos = []
+    for path in input_directory.glob("**/[0-9]*.csv"):
+        df = pd.read_csv(path,usecols=['WorkerID','Age','Gender','Mothertongue'])
+        worker_infos.append(df)
+    worker_infos = pd.concat(worker_infos,axis=0)
+
+    worker_infos.drop_duplicates(inplace=True)
+
+    worker_infos = worker_infos.groupby('WorkerID').first()
+    
+    languages = pd.read_csv(LANGUAGES_PATH)['0'].tolist()
+
+    worker_infos['Mothertongue'] = worker_infos['Mothertongue'].apply(lambda word: parse_language(word,languages))
+
+    worker_infos['Mothertongue'].unique()
+
+    # compute the amount of rows with missing entries
+    N = worker_infos.shape[0]
+    N_miss = worker_infos.isna().any(axis=1).sum()
+    if verbose:
+        print(f"Ratio of missing worker demographic info: {N_miss/N *100:.2f} %")
+    if output_dir is not None:
+        worker_infos.to_csv(output_dir.joinpath("workers_info_table.csv"))
+    return worker_infos
+
+def scrap_form_results(dataset_dir):
+    """
+    Recursively sraps all [0-9]*.csv files in the subdirectories and return
+    them concatenated in a list
+
+    Args:
+        dataset_dir (str): parent to directory to start scraping from
+
+    Returns:
+        [list of pd.DataFrame]: all form results with their respective metada associated
+    """
+    dataset_dir = Path(dataset_dir)
+    form_dfs = []
+    paths = list(dataset_dir.glob("**/[0-9]*.csv"))
+    for path in tqdm(paths):
+        form_id = int(path.stem)
+        df = pd.read_csv(path)
+        df['FormId'] = form_id
+        winfo_path = path.parent.joinpath("workers_info.csv")
+        winfo = pd.read_csv(winfo_path)
+
+        # Recover information specific to this batch (completion time)
+        df = pd.merge(df,winfo,how='left',on=['WorkerID','FormId'])
+
+        # Recover demographic information about workers (Age, sex etc)
+        df.drop(columns=['Age','Gender','Mothertongue','Feedback'],inplace=True)
+        worker_infos = build_worker_info_table(input_directory=dataset_dir,verbose=False)
+        df = pd.merge(df,worker_infos,how='left',on=['WorkerID'])
+
+        form_dfs.append(df)
+        if len(form_dfs) == 0:
+            raise ValueError(f"No .csv file was found in the subdirectories of {path}")
+
+    return form_dfs
+
+def generate_production_format(form_dfs,output_path=None):
     """
     Generate the production format from a csv file/ a parent directory
     whose children contain csv files
 
     Args:
-        path (pathlib.Path): path to the csv file/parent directory
+        form_dfs (list of pandas DataFrame): path to the csv file/parent directory
 
     Return:
         [pd.Dataframe]: the equivalent df(s) in production format
     """
-    if path.suffix == ".csv":
-        dfs = [pd.read_csv(path)]
-    else:
-        dfs = []
-        for path in path.glob("**/[0-9]*.csv"):
-            form_id = int(path.stem)
-            df = pd.read_csv(path)
-            df['FormId'] = form_id
-            df.rename(columns={'WorkerID':'WorkerId'},inplace=True)
-            winfo_path = path.parent.joinpath("workers_info.csv")
-            winfo = pd.read_csv(winfo_path)
-            df = pd.merge(df,winfo,how='left',on=['WorkerId','FormId'])
-            dfs.append(df)
-        if len(dfs) == 0:
-            raise ValueError(f"No .csv file was found in the subdirectories of {path}")
-
+    output_path = Path(output_path)
     selem2indx = pk.load(open(EMOJI_2_TOP_INDEX_PATH,"rb"))
     data = []
-    for df in tqdm(dfs):
+    for df in tqdm(form_dfs):
         em_cols = [col for col in df.columns if col in EMOJIS]
         n = len(em_cols)
         honey_col_idx = n // 2 - (n+1) %2
@@ -99,7 +180,7 @@ def generate_production_format(path):
         # get rid of the honeypot
         del em_cols[honey_col_idx]
         for _,row in df.iterrows():
-            wid = row['WorkerId']
+            wid = row['WorkerID']
             formid = row['FormId']
             duration = row['AnswerDurationInSeconds']
             for em,word in row[em_cols].iteritems():
@@ -108,5 +189,6 @@ def generate_production_format(path):
                 data.append((wid,formid,duration,emoji_index,em,word))
     data = (pd.DataFrame(data,columns=['WorkerID','FormId','Duration','emoji_index','emoji','word'])
                 .sort_values('emoji_index'))
-
+    if output_path is not None:
+        data.to_csv(output_path)
     return data

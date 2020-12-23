@@ -14,24 +14,31 @@ import pickle as pk
 from src.constants import emotions_faces,REF_PATH,MAPPING_PATH, E2V_PATH, W2V_PATH, DATA_PATH
 import sys
 sys.path.append("../../emoji2vec_working/")
-from src.exploration.form10_eda import *
 import seaborn as sns
 import numpy as np
-from src.constants import COLOR_FRAUD,COLOR_TRUE
+from src.constants import COLOR_FRAUD,COLOR_TRUE,EMOJIS
 import Levenshtein
 from pdb import set_trace
 from src.utils import extract_emojis
+from IPython.display import display
 
 ###################### SINGLE WORD ######################
-def detect_repeat_frauders(form_df,threshold=0.8):
+
+def detect_repeat_frauders(form_df,min_voc_size=0.8):
     """
     Detect the fraudulous workers i.e. the one who repeated the same word too many times
     """
     form_df = form_df.copy()
-    columns = [col for col in form_df.columns if col not in ['Timestamp','WorkerID']]
+    columns = [col for col in form_df.columns if col in EMOJIS]
     form_df['vocsize'] = form_df[columns].apply(lambda x: len(set(x)),axis=1)
-    fraud_workers = form_df[form_df['vocsize'] < threshold * len(columns)]['WorkerID'].values.tolist()
+    fraud_workers = form_df[form_df['vocsize'] < min_voc_size * len(columns)]['WorkerID'].values.tolist()
     return set(fraud_workers)
+
+def filter_repeat_frauders(form_df,min_voc_size=0.8,verbose=False):
+    frauders = detect_repeat_frauders(form_df,min_voc_size=min_voc_size)
+    if len(frauders) > 0 and verbose:
+        display(form_df[form_df['WorkerID'].isin(frauders)])
+    return form_df[~form_df['WorkerID'].isin(frauders)]
 
 def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
     """
@@ -41,16 +48,35 @@ def detect_honey_frauders(form_df,honeypots,dist_lshtein=2):
         form_df (pd.df): as saved by download_multi_emoji_csv
         dist_lshteing (int): distance tolerated to accept a honeypot
     """
-    assert(form_df['WorkerID'].is_unique)
+    if not form_df['WorkerID'].is_unique:
+        form_df = form_df.groupby('WorkerID').first().reset_index()
     form_df = form_df.set_index('WorkerID').copy()
     honey_columns = [em for em in form_df.columns if em in honeypots.keys()]
-    form_df = form_df[honey_columns]
-    assert(form_df.shape[1] > 0)
-    for em in honey_columns:
-        corr_words = honeypots[em]
-        form_df[em] = form_df[em].apply(lambda word: min([Levenshtein.distance(word,corr_word) for corr_word in corr_words]) > dist_lshtein)
-    frauder_list = form_df[form_df.any(axis=1)].index.tolist()
+    em_cols = [col for col in form_df.columns if col in EMOJIS]
+    n = len(em_cols)
+    honey_col_idx = n // 2 - (n+1) %2
+    em = em_cols[honey_col_idx]
+    corr_words = honeypots[em]
+    em_serie = form_df[em].apply(lambda word: min([Levenshtein.distance(word,corr_word) for corr_word in corr_words]) > dist_lshtein)
+    frauder_list = em_serie[em_serie].index.tolist()
     return set(frauder_list)
+
+def filter_out(forms_df,detect_func,*args,verbose=False,display_=False,**kwargs):
+    n_frauders = 0
+    clean_dfs = []
+    for form_df in forms_df:
+        frauders = detect_func(form_df,*args,**kwargs)
+        if len(frauders) > 0:
+            n_frauders += len(frauders)
+            if display_:
+                display(form_df[form_df['WorkerID'].isin(frauders)])
+        form_df = form_df[~form_df['WorkerID'].isin(frauders)]
+        clean_dfs.append(form_df)
+    if verbose:
+        print(f"Discarded {n_frauders} rows")
+    return n_frauders,clean_dfs
+
+
 
 def get_wrong_honey_entries(form_df,honeypots,dist_lshtein=2):
     """
@@ -250,3 +276,24 @@ def fraud_metrics(users,fraud,fraud_hat):
     sns.heatmap(confusion_matrix, annot=True,ax=ax,xticklabels=['P','N'],yticklabels=['P','N'])
     ax.set_xlabel("True")
     ax.set_ylabel("Predicted")
+
+def study_outsiders(form_dfs,honeypots,dist_lshtein):
+    """"
+    Display the words considered as outsiders by the honey_pots detector
+
+    Args:
+        honeypots (list of str): honeypots
+        dist_lshtein (int): levenshtein tolerance
+    """
+    outsiders = {}
+    for form_df in form_dfs:
+        em = form_df.columns[7]
+        form_df[em].unique()
+        frauders = detect_honey_frauders(form_df,honeypots=honeypots,dist_lshtein=dist_lshtein)
+        if len(frauders) > 0:
+            weird_words = form_df[form_df['WorkerID'].isin(frauders)][em].unique()
+            if em in outsiders:
+                outsiders[em].update(weird_words)
+            else:
+                outsiders[em] = set(weird_words)
+    return outsiders

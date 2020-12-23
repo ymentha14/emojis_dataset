@@ -22,6 +22,31 @@ def get_fe0f_dict():
 EMOJIS = list(emoji.UNICODE_EMOJI.keys()) + ['⛩']
 FE0F_DICT = get_fe0f_dict()
 
+
+# Honeypots
+HONEYPOTS = {"☂️":["rain","umbrella","weather"],
+             "⭐":["star","superstar","excellent","success","awesome","best","christmas","shining","winner"],
+             "☀️":["sun","sunny","bright",'brightness','daylight','shine','shining','sunlight','sunshine'],
+             "🥜":["peanut","peanuts","nut","groundnut","food"],
+             "🏀":["basket","basketball","ball","sport"],
+             "🍑":["peach","fruit","apple","apricot","berry","fresh","ripe"],
+             "🍒":["cherry","cherries","fruit"],
+             "🥑":["avocado","guacamole","vegetable"],
+             "🥒":["pickle","cucumber","vegetable"],
+             "🥕":["carrot"],
+             "🦆":["duck","penguin"],
+             "🍉":["watermelon","melon"],
+             "🍋":["lemon","lime","mango","lemonade"],
+             "🍌":["banana","potassium"],
+             "🍍":["ananas"],
+             "🍎":["apple","fruit","health"],
+             "🍓":["strawberry","strawberries"],
+             "🍔":["burger","hamburger","cheeseburger","food"],
+             "🍕":["pizza","food"],
+             "🍩":["donut","donuts","doughnut","sweet"],
+             "🍪":["cookie","cookies","biscuit","dessert"]
+            }
+
 #################### Plots ####################
 COLOR_TRUE = '#549aab'
 COLOR_FRAUD = '#d03161'
@@ -79,7 +104,6 @@ REPO_PATH = Path("/home/ymentha/Documents/Cours/dlab_project/emoji_dataset")
 if not REPO_PATH.exists():
     REPO_PATH = Path("/home/ymentha/emojivec")
 
-
 ############################## MT2GF ##############################
 
 # Drive id of the gmap object
@@ -94,25 +118,14 @@ CREDS_PATH = REPO_PATH.joinpath("creds")
 AWS_KEYS_PATH = CREDS_PATH.joinpath("aws.txt")  # keys for AWS
 TOKEN_PATH = CREDS_PATH.joinpath("token.pk")  # token for drive API
 
-# Path to the downloaded urls form
-# FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/raw/forms/dataset") # real dataset path
+# Directory where to download the data from the forms
 FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/raw/forms/pilots/test_runs")
-
-if not FORMS_RESULTS_DIR.exists():
-    FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_results/")
+# Directory where the watcher can store the downloaded csv files
 WATCHER_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/mt2gf_cache/watcher")
-HIT2FORM_PATH_SANDBOX = REPO_PATH.joinpath("data/processed/auto_mturk/hit2formsandbox.pk")
-HIT2FORM_PATH = REPO_PATH.joinpath("data/processed/auto_mturk/hit2form.pk")
-LOG_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/processed/auto_mturk/forms_log_results")
 ##################################################################
 
 
-
-
-
-
 # Em2Png
-
 PNG_DIR = REPO_PATH.joinpath("data/raw/emojis_png/")
 
 # Extracted images for all emojis
@@ -143,29 +156,11 @@ PILOT_0_DIR = PILOTS_DIR.joinpath("0_emoji10")
 PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
 
 
-# AutoMTurk
-NMB_FORMS_THRESHOLD = 2
-
-# Honeypots
-HONEYPOTS = {"☂️":["rain","umbrella"],
-             "⭐":["star"],
-             "☀️":["sun","sunny"],
-             "🥜":["peanut","peanuts","nut"],
-             "🏀":["basket","basketball","ball"],
-             "🍑":["peach"],
-             "🍒":["cherry","cherries"],
-             "🥑":["avocado"],
-             "🥒":["pickle","cucumber"],
-             "🥕":["carrot"],
-             "🦆":["duck","penguin"],
-             "🍉":["watermelon","melon"],
-             "🍋":["lemon","lime","mango"],
-             "🍌":["banana"],
-             "🍍":["ananas"],
-             "🍎":["apple"],
-             "🍓":["strawberry"],
-             "🍔":["burger","hamburger"],
-             "🍕":["pizza"],
-             "🍩":["donut","donuts"],
-             "🍪":["cookie","cookies","biscuit"]
-            }
+# Dataset Analysis
+# Path to the raw data of the collected emoji dataset
+EMOJI_DATASET_DIR = REPO_PATH.joinpath("data/raw/forms/dataset")
+EMOJI_DATASET_EXPORT_DIR = REPO_PATH.joinpath("data/processed/dataset")
+EMOJI_DATASET_EXPORT_PATH = EMOJI_DATASET_EXPORT_DIR.joinpath("exp_emoji_dataset.csv")
+EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
+# List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
+LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")

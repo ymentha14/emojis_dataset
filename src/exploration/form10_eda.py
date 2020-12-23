@@ -34,7 +34,7 @@ def read_meta(path,n_emojis):
     Read the metadata as returned in the .csv from MTurk
     """
     cols_oi = ['WorkTimeInSeconds']
-    meta_df = pd.read_csv(path,index_col='WorkerId')
+    meta_df = pd.read_csv(path,index_col='WorkerID')
     meta_df = meta_df[cols_oi]
     meta_df.rename(columns={'WorkTimeInSeconds':'worktime'},inplace=True)
     meta_df['n_emojis'] = n_emojis

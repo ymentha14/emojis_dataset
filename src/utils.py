@@ -5,7 +5,6 @@ from src.constants import skin_tones, em_letters, EMOJIS,man_woman,FE0F_DICT,sex
 
 from copy import copy
 from pdb import set_trace
-from src.constants import URL_INDEX_PATH
 import pandas as pd
 from pathlib import Path
 
@@ -13,6 +12,8 @@ def limit_memory(maxsize):
     """ Prevent computer from crashing"""
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
     resource.setrlimit(resource.RLIMIT_AS, (maxsize, maxsize))
+
+
 
 
 def extract_emojis(text,find_tone=False):
