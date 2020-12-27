@@ -18,7 +18,10 @@ import pickle as pk
 import time
 from pathlib import Path
 
-def print_and_capture(x,y,width,height,output_dir_png,mapping_path,emojis,test=False):
+
+def print_and_capture(
+    x, y, width, height, output_dir_png, mapping_path, emojis, test=False
+):
     """
     Print and screenshot the emojis for a universal representation: you first need to calibrate
     the x,y,height,width coordinate by trial and error untill the desired format is obtained.
@@ -40,13 +43,13 @@ def print_and_capture(x,y,width,height,output_dir_png,mapping_path,emojis,test=F
     if not_empty:
         raise ValueError("Directory not empty: please provide an empty directory.")
 
-    bbox = (x,y,x+width,y+height)
+    bbox = (x, y, x + width, y + height)
 
     if test:
         print("😃")
     else:
         dic = {}
-        for i,em in enumerate(emojis):
+        for i, em in enumerate(emojis):
             path = output_dir_png.joinpath(str(i)).with_suffix(".png")
             print(em)
             time.sleep(0.15)
@@ -54,4 +57,4 @@ def print_and_capture(x,y,width,height,output_dir_png,mapping_path,emojis,test=F
             im.save(path)
             clear_output()
             dic[em] = i
-        pk.dump(dic,open(mapping_path,"wb"))
+        pk.dump(dic, open(mapping_path, "wb"))

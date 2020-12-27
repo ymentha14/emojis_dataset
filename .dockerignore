@@ -8,5 +8,6 @@
 !setup.py
 !dist
 !emoji2vec
+!Makefile
 emoji2vec/emoji2vec
 !notebooks
