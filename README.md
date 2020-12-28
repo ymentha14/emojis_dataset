@@ -100,17 +100,31 @@ As the gathered raw data is stored in its original batch structure, you can gene
 ```
 make dataset
 ```
-and playing with the outlier detection parameters (repeating outliers/honeypot outliers). The generated dataset is available in the directory referred to by the`RESULTS_DIR` environment variable.
+and playing with the outlier detection parameters (repeating outliers/honeypot outliers).
+
+The following files are available in the directory referred to by the `RESULTS_DIR` environment variable:
+
+#### Dataset
+`emoji_dataset_prod.csv`: Output file containing the words used to describe the emojis presenting the following columns
+  * **WorkerID**: mturk id of the worker
+  * **FormId**: index of the form the emoji was part of (10 emojis/form)
+  * **Duration**: time taken by the worker to complete the form
+  * **emoji_index**: index of the current in the 1325-emojis indexing
+  * **emoji**: string representation of the emoji (UTF-8)
+  * **word**: word chosen by the worker to describe the emoji
+#### Demographic Information
+
+
+`workers_info_table.csv`: demographic information related to workers having completed the surveys. Presents the following columns
+  * **WorkerID**: mturk id of the worker
+  * **Age**: age of the worker
+  * **Gender**: gender of the worker
+  *  **Mothertongue**: mothertongue of the worker
+
+
 
 **NB**: Emojis Dataset uses the [Mturk2Gform](https://github.com/ymentha14/mturk2gform) package, which was itself developped in the context of this project.
 
-
-## Usage
-The Emojis Dataset project is divided in 8 parts: each of these parts has a respective commented notebook in the `notebooks` folder.
-
-
-#### Google Credentials
-You need to set up the Google [People API](https://developers.google.com/people/quickstart/python) associated with your Google Drive account to establish the link with Mturk2Gform: once you are done, you can save the `credentials.json` file.
 
 Project Structure
 ------------
@@ -195,38 +209,22 @@ Project Structure
 
 --------
 
+## Usage
+The Emojis Dataset project is divided in 8 parts: each of these parts has a respective commented notebook in the `notebooks` folder.
 
 
 
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-
-
-<!-- LICENSE -->
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 
 
-<!-- CONTACT -->
 ## Contact
+[Project Link](https://github.com/epfl-dlab/emojivec)
 
-Your Name  - yann.mentha@gmail.com
+yann.mentha@gmail.com
 
-Project Link: [https://github.com/ymentha14/mturk2gform](https://github.com/ymentha14/mturk2gform)
 
 
 

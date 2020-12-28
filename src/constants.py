@@ -505,7 +505,7 @@ sex_symbols = ["\u2640", "\u2642", "\u2640\ufe0f", "\u2642\ufe0f"]
 
 
 #################### Path Constants ####################
-REPO_PATH = Path(os.getenv("REPO_DIR"))
+REPO_PATH = Path(os.getenv("REPO_DIR","/home/ymentha/Documents/Cours/dlab_project/emoji_dataset"))
 REF_PATH = REPO_PATH.joinpath("emoji2vec/emoji2vec/")
 MAPPING_PATH = str(REF_PATH.joinpath("data/word2vec/emoji_mapping.p"))
 E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
@@ -569,7 +569,6 @@ PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
 # Path to the raw data of the collected emoji dataset
 EMOJI_DATASET_DIR = REPO_PATH.joinpath("data/raw/forms/dataset")
 EMOJI_DATASET_EXPORT_DIR = REPO_PATH.joinpath("data/processed/dataset")
-EMOJI_DATASET_EXPORT_PATH = EMOJI_DATASET_EXPORT_DIR.joinpath("exp_emoji_dataset.csv")
 EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
 # List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
 LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")

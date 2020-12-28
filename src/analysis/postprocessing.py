@@ -175,7 +175,7 @@ def scrap_form_results(dataset_dir):
     return form_dfs
 
 
-def generate_production_format(form_dfs, output_path=None):
+def generate_production_format(form_dfs, output_dir=None):
     """
     Generate the production format from a csv file/ a parent directory
     whose children contain csv files
@@ -186,7 +186,8 @@ def generate_production_format(form_dfs, output_path=None):
     Return:
         [pd.Dataframe]: the equivalent df(s) in production format
     """
-    output_path = Path(output_path)
+    if output_dir is not None:
+        output_path = Path(output_dir).joinpath("emoji_dataset_prod.csv")
     selem2indx = pk.load(open(EMOJI_2_TOP_INDEX_PATH, "rb"))
     data = []
     for df in tqdm(form_dfs):
@@ -207,7 +208,7 @@ def generate_production_format(form_dfs, output_path=None):
     data = pd.DataFrame(
         data, columns=["WorkerID", "FormId", "Duration", "emoji_index", "emoji", "word"]
     ).sort_values("emoji_index")
-    if output_path is not None:
+    if output_dir is not None:
         data.to_csv(output_path)
     return data
 
@@ -225,11 +226,14 @@ if __name__ == '__main__':
         "-l", "--lshtein", help="Tolerance for the honeypots inputs in terms of Levenshtein distance",type=float, default=None
     )
     parser.add_argument(
-        "-o", "--output_path", help="Output path for the production format of the dataset",
-        default="/app/data/processed/dataset/emoji_dataset_prod.csv"
+        "-o", "--output_dir", help="Output path for the production format of the dataset",
+        default="/app/results"
     )
     args = parser.parse_args()
 
+    # create the worker infos table
+    worker_infos = build_worker_info_table(input_directory=args.input_dir,
+                                           output_dir=args.output_dir)
     # Gather every form dataframe in a list
     form_dfs = scrap_form_results(args.input_dir)
 
@@ -246,4 +250,4 @@ if __name__ == '__main__':
         n_honey, form_dfs = filter_out(
         form_dfs, detect_honey_frauders, HONEYPOTS, dist_lshtein=dist_lshtein, verbose=True)
 
-    tot_df = generate_production_format(form_dfs, args.output_path)
+    tot_df = generate_production_format(form_dfs, args.output_dir)
