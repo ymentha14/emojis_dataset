@@ -1,4 +1,3 @@
-from nltk.corpus import brown
 import pkg_resources
 from symspellpy import SymSpell, Verbosity
 from collections import Counter
@@ -22,7 +21,6 @@ class WordSuggester:
         self,
     ):
         print("Initializing the vocabulary set..")
-        #self.word_set = set(brown.words())
         self.d = enchant.Dict("en_US")
         print("Initializing BERT pipeline..")
 
@@ -63,6 +61,7 @@ class WordSuggester:
             return False,""
         corr_word = max(present_words.items(), key=operator.itemgetter(1))[0]
         return True,corr_word
+
     def get_word_suggestions(self, word, word_counts):
         """
         Return the suggestions for the word passed in parameter. If the
@@ -73,38 +72,42 @@ class WordSuggester:
             word (str): the word to find suggestions for
             word_counts (dict): value counts of word for a given emoji (context)
         """
-        # if the word appears many times we keep it
+        # If the word appears many times in answers, we keep it
         if self.cross_word_validate(word, word_counts):
             return {"status": "present", "words": [word]}
 
-        # if the word is part of the vocabulary we keep it
+        # If the word is part of the english vocabulary we keep it
         if self.d.check(word):
             return {"status": "exist", "words": [word]}
 
+        # If the suggestions associated to the word appear in the rest of the answers
+        # we keep the most common one
         cross_sugg,corr_word = self.cross_sugg_validate(word,word_counts)
         if cross_sugg:
             return {"status": "cross_suggested", "words": [corr_word]}
 
-        # if it is a combinaison of many words
+        # If the cutting of the word into several words is very confident, we disassemble it
         result = self.sym_spell_cut.word_segmentation(word)
         log_confidence = result.log_prob_sum / len(result.corrected_string)
         if log_confidence > -1:
             suggestions = result.corrected_string
             return {"status": "disassembled1", "words": [result.corrected_string]}
 
-        # if combination of many words
+        # Same approach using another library
         is_multi,corr_word = self.is_multiword(word)
         if is_multi:
             return {"status": "disassembled2", "words": [corr_word]}
 
-        # otherwise we correct it
-        suggestions = self.sym_spell.lookup(
+        # We use the other words as a context to select among the suggestions
+        suggestions = [sugg.term for sugg in self.sym_spell.lookup(
             word, Verbosity.CLOSEST, max_edit_distance=2
-        )
-        # display suggestion term, term frequency, and edit distance
-        if len(suggestions) == 0:
-            return {"status": "notfound", "words": [word]}
-        return {"status": "corrected", "words": [sugg.term for sugg in suggestions]}
+        )]
+        if len(suggestions) > 0:
+            return {"status": "corrected", "words": suggestions}
+
+        # The word is probably unknown
+        return {"status": "notfound", "words": [word]}
+
 
     def get_context_suggestions(self, word_list):
         """

@@ -5,8 +5,9 @@ functions to extract relevant statistics and plots from the gathered data
 
 from IPython.display import display
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
-from src.constants import EMOJIS, HONEYPOTS, EMOJI_2_TOP_INDEX_PATH, LANGUAGES_PATH
+from src.constants import COLOR1,COLOR2,EXPORT_DIR,EMOJIS, HONEYPOTS, EMOJI_2_TOP_INDEX_PATH, LANGUAGES_PATH, EMOJI_DATASET_DIR
 import pickle as pk
 from pdb import set_trace
 import Levenshtein
@@ -14,6 +15,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import argparse
 from src.analysis.fraudulous import filter_out, detect_honey_frauders, detect_repeat_frauders,study_outsiders
+from src.utils import write_to_latex
+import seaborn as sns
+sns.set()
 
 def get_emojis_voc_counts(path):
     """
@@ -100,13 +104,12 @@ def parse_language(target_word, word_list):
     return best_word
 
 
-def build_worker_info_table(input_directory, output_dir=None, verbose=False):
+def build_worker_info_table(input_directory, verbose=False):
     """
     Gather and clean the demographic information about workers and save it in the output directory.
 
     Args:
         input_directory (str): parent directory in which the function will recursively find the csv files
-        output_path (str): path where to store the workers info table
     """
     input_directory = Path(input_directory)
     worker_infos = []
@@ -132,8 +135,6 @@ def build_worker_info_table(input_directory, output_dir=None, verbose=False):
     N_miss = worker_infos.isna().any(axis=1).sum()
     if verbose:
         print(f"Ratio of missing worker demographic info: {N_miss/N *100:.2f} %")
-    if output_dir is not None:
-        worker_infos.to_csv(output_dir.joinpath("workers_info_table.csv"))
     return worker_infos
 
 
@@ -149,23 +150,23 @@ def scrap_form_results(dataset_dir):
         [list of pd.DataFrame]: all form results with their respective metada associated
     """
     dataset_dir = Path(dataset_dir)
+    worker_infos = build_worker_info_table(
+            input_directory=dataset_dir, verbose=False
+    )
     form_dfs = []
     paths = list(dataset_dir.glob("**/[0-9]*.csv"))
     for path in tqdm(paths):
         form_id = int(path.stem)
         df = pd.read_csv(path)
         df["FormId"] = form_id
-        winfo_path = path.parent.joinpath("workers_info.csv")
-        winfo = pd.read_csv(winfo_path)
+        comp_time_path = path.parent.joinpath("completion_times.csv")
+        comp_time = pd.read_csv(comp_time_path)
 
         # Recover information specific to this batch (completion time)
-        df = pd.merge(df, winfo, how="left", on=["WorkerID", "FormId"])
+        df = pd.merge(df, comp_time, how="left", on=["WorkerID", "FormId"])
 
         # Recover demographic information about workers (Age, sex etc)
         df.drop(columns=["Age", "Gender", "Mothertongue", "Feedback"], inplace=True)
-        worker_infos = build_worker_info_table(
-            input_directory=dataset_dir, verbose=False
-        )
         df = pd.merge(df, worker_infos, how="left", on=["WorkerID"])
 
         form_dfs.append(df)
@@ -175,7 +176,7 @@ def scrap_form_results(dataset_dir):
     return form_dfs
 
 
-def generate_production_format(form_dfs, output_dir=None):
+def generate_production_format(form_dfs):
     """
     Generate the production format from a csv file/ a parent directory
     whose children contain csv files
@@ -186,8 +187,6 @@ def generate_production_format(form_dfs, output_dir=None):
     Return:
         [pd.Dataframe]: the equivalent df(s) in production format
     """
-    if output_dir is not None:
-        output_path = Path(output_dir).joinpath("emoji_dataset_prod.csv")
     selem2indx = pk.load(open(EMOJI_2_TOP_INDEX_PATH, "rb"))
     data = []
     for df in tqdm(form_dfs):
@@ -208,10 +207,108 @@ def generate_production_format(form_dfs, output_dir=None):
     data = pd.DataFrame(
         data, columns=["WorkerID", "FormId", "Duration", "emoji_index", "emoji", "word"]
     ).sort_values("emoji_index")
-    if output_dir is not None:
-        data.to_csv(output_path)
     return data
 
+def get_varied_cstt_results(tot_df):
+    voc_df = (tot_df.groupby('emoji')['word'].agg(lambda x: len(set(x)))
+                .sort_values(ascending = False).index)
+    varied_em_df = tot_df[tot_df['emoji'] == voc_df[0]].sample(5)
+    cstt_em_df = tot_df[tot_df['emoji'] == voc_df[-3]].sample(5)
+    return varied_em_df,cstt_em_df
+
+
+def generate_dataset(input_dir, lshtein, voc_size):
+    # Gather every form dataframe in a list
+    form_dfs = scrap_form_results(input_dir)
+
+    N = sum([df.shape[0] for df in form_dfs])
+    print(f"Initial data shape: {N} rows")
+
+    # Repeat outsiders
+    if voc_size is not None:
+        n_frauders, form_dfs = filter_out(
+        form_dfs, detect_repeat_frauders, min_voc_size=voc_size, verbose=True, display_=False)
+
+    # Honeypots outsiders
+    if lshtein is not None:
+        n_honey, form_dfs = filter_out(
+        form_dfs, detect_honey_frauders, HONEYPOTS, dist_lshtein=lshtein, verbose=True)
+
+    dataset_df = generate_production_format(form_dfs)
+    return dataset_df
+
+def plot_nmb_form_per_worker(tot_df,ax=None,fig=None):
+    if ax is None or fig is None:
+        fig,ax = plt.subplots(1, figsize=(10, 5))
+    form_per_worker = (tot_df.groupby('WorkerID')['FormId']
+                             .agg(lambda x: len(set(x))))
+    form_per_worker.hist(ax=ax,color=COLOR2)
+    ax.set_xlabel("Number of form answered")
+    ax.set_ylabel("Number of workers")
+    ax.set_title("Histogram of number of forms answered per worker")
+
+def main():
+    # Parameters
+    input_dir = EMOJI_DATASET_DIR
+    output_dir = EXPORT_DIR.joinpath("data/")
+    output_dir.mkdir(exist_ok=True,parents=True)
+    lshtein = 3
+    voc_size = 0.8
+
+    # Dataset creation
+    dataset_df = generate_dataset(input_dir,lshtein,voc_size)
+    dataset_df.to_csv(output_dir.joinpath("emoji_dataset_prod.csv"))
+
+    # Workers demographic information
+    worker_infos = build_worker_info_table(input_directory=input_dir, verbose=True)
+    worker_infos.to_csv(output_dir.joinpath("demographic_info.csv"))
+
+    # Dataset Statistics
+    export_dir = EXPORT_DIR.joinpath("plots/dataset_stats")
+    export_dir.mkdir(exist_ok=True,parents=True)
+    fig,axes = plt.subplots(1,2,figsize=(15,5))
+    plot_hist_nmb_anot_per_emoji(dataset_df)
+    plt.savefig(export_dir.joinpath("dataset_distribution.jpeg"))
+
+    fig,ax = plt.subplots(1, figsize=(10, 5))
+    plot_nmb_form_per_worker(dataset_df,fig=fig,ax=ax)
+    plt.savefig(export_dir.joinpath("form_per_worker.jpeg"))
+
+
+
+    # Save most varied, most constant and sample of the datset
+    np.random.seed(14)
+    output_dir = EXPORT_DIR.joinpath("latex_samples/")
+    output_dir.mkdir(exist_ok=True,parents=True)
+    var_df,cstt_df = get_varied_cstt_results(dataset_df)
+    sample_df = dataset_df.sample(15)
+    worker_sample = worker_infos.sample(5)
+
+    write_to_latex(output_dir.joinpath("varied.tex"),var_df)
+    write_to_latex(output_dir.joinpath("cstt.tex"),cstt_df)
+    write_to_latex(output_dir.joinpath("sample.tex"),sample_df)
+    write_to_latex(output_dir.joinpath("worker_sample.tex"),worker_sample,index=True)
+
+def plot_hist_nmb_anot_per_emoji(tot_df,axes=None,fig=None):
+    """
+    """
+    if axes is None or fig is None:
+        fig,axes = plt.subplots(1,2,figsize=(15,5))
+
+    ax = axes[0]
+    val_counts = tot_df['emoji'].value_counts()
+    val_counts.hist(ax=ax,color=COLOR1)
+    ax.set_xlabel("Number of annotations")
+    ax.set_ylabel("Number of emojis")
+    ax.set_title("Histogram of annotations number per emojis")
+    
+    ax = axes[1]
+    voc_size_per_emoji = tot_df.groupby('emoji')['word'].agg(lambda x: len(set(x)))
+    voc_size_per_emoji = voc_size_per_emoji / val_counts
+    voc_size_per_emoji.hist(ax=ax,bins=25,color=COLOR1)
+    ax.set_xlabel('Size of vocabulary/word')
+    ax.set_ylabel('Number of emojis')
+    ax.set_title('Histogram of normalized vocabulary size')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -231,23 +328,10 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    # create the worker infos table
-    worker_infos = build_worker_info_table(input_directory=args.input_dir,
-                                           output_dir=args.output_dir)
-    # Gather every form dataframe in a list
-    form_dfs = scrap_form_results(args.input_dir)
+    input_dir = args.input_dir
+    output_dir = args.output_dir
+    lshtein = args.lshtein
+    voc_size = args.voc_size
+    dataset_df = generate_dataset(input_dir, lshtein, voc_size)
+    dataset_df.to_csv(output_dir.joinpath("emoji_dataset_prod.csv"))
 
-    N = sum([df.shape[0] for df in form_dfs])
-    print(f"Initial data shape: {N} rows")
-
-    # Repeat outsiders
-    if args.voc_size is not None:
-        n_frauders, form_dfs = filter_out(
-        form_dfs, detect_repeat_frauders, min_voc_size=args.voc_size, verbose=True, display_=False)
-
-    # Honeypots outsiders
-    if args.lshtein is not None:
-        n_honey, form_dfs = filter_out(
-        form_dfs, detect_honey_frauders, HONEYPOTS, dist_lshtein=dist_lshtein, verbose=True)
-
-    tot_df = generate_production_format(form_dfs, args.output_dir)

@@ -12,6 +12,7 @@ emoji2vec/
 data/raw/tweets/
 build/
 develop-eggs/
+results/*
 dist/
 downloads/
 eggs/

@@ -36,6 +36,14 @@ from IPython.display import display
 def detect_repeat_frauders(form_df, min_voc_size=0.8):
     """
     Detect the fraudulous workers i.e. the one who repeated the same word too many times
+    
+    Args:
+        form_df (pd.Dataframe): df obtained from a formular
+        min_voc_size (float): if the vocabulary size of the worker goes below this limit,
+        its answer is considered as fraudulent
+    
+    Returns:
+        [set of str]: set of fraudulent worker ids
     """
     form_df = form_df.copy()
     columns = [col for col in form_df.columns if col in EMOJIS]

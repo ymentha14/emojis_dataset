@@ -72,6 +72,10 @@ HONEYPOTS = {
 }
 
 #################### Plots ####################
+COLOR1 = "#549aab"
+COLOR2 = "#d03161"
+COLOR3 = "#f6a90f"
+COLOR4 = "#8359a3"
 COLOR_TRUE = "#549aab"
 COLOR_FRAUD = "#d03161"
 COLOR_PLOT = "#50C878"
@@ -572,3 +576,4 @@ EMOJI_DATASET_EXPORT_DIR = REPO_PATH.joinpath("data/processed/dataset")
 EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
 # List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
 LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")
+EXPORT_DIR = REPO_PATH.joinpath("results")

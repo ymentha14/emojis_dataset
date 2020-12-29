@@ -21,9 +21,10 @@ import warnings
 import pickle as pk
 from numpy.random import permutation
 import pdb, traceback, sys
-from src.constants import TWEET_PATHS_PATH, TWEET_PATH, TWEET_SAMPLES_DIR
+from src.constants import (flags,em_letters,em_numbers,em_hours,TWEET_EM_COUNT_PATH,TWEET_PATHS_PATH,
+                           EXPORT_DIR,TWEET_PATH,TWEET_SAMPLES_DIR,COLOR1,COLOR2)
 
-
+from src.utils import tononymize_list,genderonymize_list,keep_fe0f_emojis
 warnings.filterwarnings("ignore")
 sns.set()
 
@@ -206,15 +207,28 @@ def load_or_compute_em_df(em_path, tweet_path=None):
     return em_df
 
 
-def print_tot_emoji_ratio(em_df):
+def get_tot_emoji_ratio(em_set):
     """
     Print the ratio of total emojis represented in em_df
     (the emoji lib is used as a reference)
     """
-    absent_emojis = set(emoji.UNICODE_EMOJI) - set(em_df.index)
-    print(
-        f"Grasped {len(em_df) / len(emoji.UNICODE_EMOJI)* 100:.2f}% of the total emojis"
-    )
+    absent_emojis = set(emoji.UNICODE_EMOJI) - set(em_set)
+    return len(em_set) / len(emoji.UNICODE_EMOJI)
+
+def plot_top_10(em_df,ax=None):
+    if ax is None:
+        fig, ax = plt.subplots(1)
+    tot_count = em_df.sum()
+    top10 = em_df.head(10) / tot_count
+
+    for em in top10.index:
+        print(em,end="")
+        top10.plot.bar(ax=ax,color=COLOR1)
+    ax.set_xlabel("Top 10 most used emojis")
+    ax.set_ylabel("Proportion of total use")
+    ax.set_title("Proportion of total use of top 10 most used emojis")
+
+
 
 
 def display_cover_app_ratio(em_df, ax=None):
@@ -225,7 +239,7 @@ def display_cover_app_ratio(em_df, ax=None):
         fig, ax = plt.subplots(1)
     df = em_df.to_frame(name="counts")
     df["tot_ratio"] = df["counts"].cumsum() / df["counts"].sum()
-    df["tot_ratio"].reset_index().head(1000).plot(ax=ax)
+    df["tot_ratio"].reset_index().head(1000).plot(ax=ax,color=COLOR1)
     ax.get_legend().remove()
     ax.set_xlabel("# of emojis [sorted wrt counts]")
     ax.set_ylabel("Ratio of Covered emojis apparition")
@@ -238,7 +252,7 @@ def display_log_hist(em_df, ax=None):
     """
     if ax is None:
         fig, ax = plt.subplots(1)
-    em_df.hist(ax=ax, bins=50)
+    em_df.hist(ax=ax, bins=50,color=COLOR1)
     ax.set_yscale("log")
     q25, q50, q75, q99 = (
         em_df.quantile(0.25),
@@ -256,11 +270,78 @@ def display_log_hist(em_df, ax=None):
     print(f"Q75:{q75}")
     print(f"Q99:{q99}")
 
+def estimate_covered_ratio(em_df,emojis):
+    """
+    Estimates the ratios of uses covered by the emojis set wrt to em_df value_counts
+
+    Args:
+        em_df (pd.Series): value counts of emojis on a tweeter dataset
+        emojis (list of str): list of selected emojis
+    """
+
+    tweet_ems = set(em_df.index)
+    selected_em = set(emojis)
+    tot_em = set()
+    for tem in tweet_ems:
+        if tem in selected_em:
+            tot_em.add(tem)
+        if any([(tem in em or em in tem) for em in selected_em]):
+            tot_em.add(tem)
+
+    covered_ratio = em_df[tot_em].sum() / em_df.sum()
+    print(f"Covered tweeter data ratio: {covered_ratio * 100:.2f} %")
+    print
+
+
+def main():
+    # Export path creation
+    selection_export_dir = EXPORT_DIR.joinpath("plots/selection")
+    selection_export_dir.mkdir(exist_ok=True,parents=True)
+
+    # Loading of the value counts
+    em_df = load_or_compute_em_df(TWEET_EM_COUNT_PATH)
+    ratio = get_tot_emoji_ratio(em_df.index)
+    print(f"Approx {ratio* 100:.2f}% of all emojis covered by the tweeter data")
+
+    # Top 10 proportion
+    fig,ax = plt.subplots(1, figsize=(10, 5))
+    plot_top_10(em_df,ax=ax)
+    plt.savefig(selection_export_dir.joinpath("top10.jpeg"))
+
+    # Covered emojis ratio
+    fig,ax = plt.subplots(1, figsize=(10, 5))
+    display_cover_app_ratio(em_df, ax=ax)
+    plt.savefig(selection_export_dir.joinpath("covered_emojis.jpeg"))
+
+    # Emojis selection
+    emojis = set(emoji.UNICODE_EMOJI.keys())
+    print(f"Original length:{len(emojis)}")
+
+    emojis = [em for em in emojis if em not in (flags + em_letters + em_numbers + em_hours)]
+    print(f"Removing flags and letters and numbers:{len(emojis)}")
+
+    emojis = tononymize_list(emojis)
+    print(f"Removing tones:{len(emojis)}")
+
+    emojis = genderonymize_list(emojis)
+    print(f"Removing gender:{len(emojis)}")
+
+    emojis = sorted(keep_fe0f_emojis(emojis))
+    print(f"Removing fe0f equivalent:{len(emojis)}")
+    print("=" * 24 + "\n")
+    print(f"Total number of emojis {len(emojis)}\n")
+    estimate_covered_ratio(em_df,emojis)
+
+    ratio = get_tot_emoji_ratio(emojis)
+    print(f"Approx {ratio*100:.2f}% of all emojis covered by the selection")
+
+
+
 
 if __name__ == "__main__":
     try:
-        print("Starting")
-        compute_twitter_data(TWEET_PATH)
+        #compute_twitter_data(TWEET_PATH)
+        main()
     except:
         extype, value, tb = sys.exc_info()
         traceback.print_exc()

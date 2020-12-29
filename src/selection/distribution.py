@@ -10,6 +10,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.core.debugger import set_trace
 from scipy.spatial import distance
+from src.exploration.form10_eda import read_form, str2vocab
+from src.constants import (COLOR1,COLOR2,COLOR3,COLOR4,
+                           EXPORT_DIR, PILOT_1_DIR)
+import seaborn as sns
+sns.set()
 
 
 def get_voc_size(serie):
@@ -134,7 +139,7 @@ def plot_trajectories(em_serie, ax=None, N_TRAJ=20, rand_norm_traj=False):
     if rand_norm_traj:
         trajectories = [(random_traj - traj) / random_traj for traj in trajectories]
     else:
-        random_traj.plot(ax=ax, color="blueviolet", label="random_ref")
+        random_traj.plot(ax=ax, color=COLOR4, label="random_ref")
 
     trajectories = pd.concat(trajectories, axis=1)
 
@@ -142,20 +147,24 @@ def plot_trajectories(em_serie, ax=None, N_TRAJ=20, rand_norm_traj=False):
     median_traj = trajectories.median(axis=1)
 
     for col in trajectories.columns:
-        trajectories[col].plot(ax=ax, color="red", alpha=0.2, label="")
-    mean_traj.plot(ax=ax, color="green", label="mean")
-    median_traj.plot(ax=ax, color="#1261A0", label="median")
+        trajectories[col].plot(ax=ax, color=COLOR1, alpha=0.2, label="")
+    mean_traj.plot(ax=ax, color=COLOR3, label="mean")
+    median_traj.plot(ax=ax, color=COLOR2, label="median")
     # labels
-    ax.set_xlabel("# of users")
-    ax.set_ylabel("JS divergence btwn N and N+1")
+    ax.set_xlabel("nmb of annotation")
+    ax.set_ylabel("JS divergence btwn steps N and N+1")
     ax.legend()
 
 
-def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False):
+def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=None,fig=None):
     """
     Plot the random trajectories as in plot_trajectories for the 9 first emojis of form_df
     """
-    fig, axes = plt.subplots(3, 3, figsize=(15, 15))
+    if axes is None or fig is None:
+        fig, axes = plt.subplots(3, 3, figsize=(15, 15))
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.95)
+    fig.suptitle('Incremental Jensen-Shannon divergence for vocabulary distribution', fontsize=20)
     axes = axes.reshape(-1)
     for ax, col in zip(axes, form_df.columns):
         print(col, end="")
@@ -166,3 +175,29 @@ def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False):
         for ax in axes:
             # ax.set_ylim((0,y_lim))
             ax.set_yscale("log")
+
+def main():
+    # Export path creation
+    export_dir = EXPORT_DIR.joinpath("plots/distribution")
+    export_dir.mkdir(exist_ok=True,parents=True)
+
+    # Loading of pilot data
+    asymp_df1 = read_form(PILOT_1_DIR.joinpath("Asymptotic_Emoji_Agreement_1.csv"))
+    asymp_df1.drop(columns=['👕','🚓','🇵🇱','💱'],inplace=True)
+    asymp_df2 = read_form(PILOT_1_DIR.joinpath("Asymptotic_Emoji_Agreement_2.csv"))
+    asymp_df = pd.concat([asymp_df1,asymp_df2],axis=0)
+    asymp_df = str2vocab(asymp_df)
+
+    # Plot 1
+    fig, axes = plt.subplots(3, 3, figsize=(15, 15))
+    plot_multi_trajectories(asymp_df,log_scale=True,fig=fig,axes=axes)
+    plt.savefig(export_dir.joinpath("distribution.jpeg"))
+
+    # Plot 2
+    fig, axes = plt.subplots(3, 3, figsize=(15, 15))
+    plot_multi_trajectories(asymp_df,rand_norm_traj=True,fig=fig,axes=axes)
+    plt.savefig(export_dir.joinpath("distribution_norm.jpeg"))
+
+
+
+

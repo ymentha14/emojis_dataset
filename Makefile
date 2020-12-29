@@ -36,7 +36,6 @@ build_image:
 	@docker build -t emoji_dataset .
 
 run_container:
-	echo ${DATA_DIR}
 	@docker run -it \
 	-e USER=$USER \
 	-e REPO_DIR=/app \

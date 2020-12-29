@@ -21,6 +21,9 @@ def limit_memory(maxsize):
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
     resource.setrlimit(resource.RLIMIT_AS, (maxsize, maxsize))
 
+def write_to_latex(path,df,index=False):
+    with open(path,"w") as f:
+        f.write(df.to_latex(index=index),label="fig::" + path.stem)
 
 def extract_emojis(text, find_tone=False):
     """
