@@ -11,14 +11,6 @@ fraudulous inputs
 
 
 import pickle as pk
-from src.constants import (
-    emotions_faces,
-    REF_PATH,
-    MAPPING_PATH,
-    E2V_PATH,
-    W2V_PATH,
-    DATA_PATH,
-)
 import sys
 
 sys.path.append("../../emoji2vec_working/")

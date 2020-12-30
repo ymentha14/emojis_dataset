@@ -295,7 +295,7 @@ def estimate_covered_ratio(em_df,emojis):
 
 def main():
     # Export path creation
-    selection_export_dir = EXPORT_DIR.joinpath("plots/selection")
+    selection_export_dir = EXPORT_DIR.joinpath("report_files")
     selection_export_dir.mkdir(exist_ok=True,parents=True)
 
     # Loading of the value counts

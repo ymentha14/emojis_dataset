@@ -1,6 +1,11 @@
 FROM python:3.6.9
 COPY ./ ./app
 WORKDIR ./app
+
+# Change to non root user
+RUN useradd -u 8877 nonroot
+USER nonroot
+
 RUN apt-get update && \
     apt-get -y install curl && \
     apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates && \

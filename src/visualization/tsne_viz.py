@@ -1,5 +1,4 @@
 import matplotlib, mplcairo
-
 matplotlib.use("module://mplcairo.qt")
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -7,7 +6,7 @@ import numpy as np
 import sklearn.manifold as man
 import pickle as pk
 import gensim.models as gs
-from src.constants import E2V_PATH, MAPPING_PATH, W2V_PATH
+from src.constants import E2V_PATH, MAPPING_PATH, W2V_PATH, EMOJI_FONT_PATH
 from matplotlib.font_manager import FontProperties
 from src.constants import emotions_faces
 import argparse
@@ -19,7 +18,11 @@ def tsne_plot(e2v, em_list, name="emojis_tsne", fontsize=12, w2v=None, word_list
     assert (w2v is None and word_list is None) or (
         w2v is not None and word_list is not None
     )
-    prop = FontProperties(fname="/home/ymentha/Downloads/Apple Color Emoji.ttf")
+
+    # Special Font required to plot emojis
+    prop = FontProperties(fname=EMOJI_FONT_PATH)
+
+    # Extract embeddings
     embedding = [e2v.get_vector(em) for em in em_list]
     if w2v is not None:
         embedding = embedding + [w2v.get_vector(word) for word in word_list]
@@ -56,8 +59,8 @@ if __name__ == "__main__":
 
     # mapping from id to emoji
     mapping = pk.load(open(MAPPING_PATH, "rb"))
-    # emojis embedding
 
+    # emojis embedding
     e2v = gs.KeyedVectors.load_word2vec_format(E2V_PATH, binary=True)
     if args.faces:
         print("Computing tsne for emotions faces exclusively")

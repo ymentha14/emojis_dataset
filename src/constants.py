@@ -62,7 +62,7 @@ HONEYPOTS = {
     "🍉": ["watermelon", "melon"],
     "🍋": ["lemon", "lime", "mango", "lemonade"],
     "🍌": ["banana", "potassium"],
-    "🍍": ["ananas"],
+    "🍍": ["ananas","pineapple"],
     "🍎": ["apple", "fruit", "health"],
     "🍓": ["strawberry", "strawberries"],
     "🍔": ["burger", "hamburger", "cheeseburger", "food"],
@@ -510,11 +510,12 @@ sex_symbols = ["\u2640", "\u2642", "\u2640\ufe0f", "\u2642\ufe0f"]
 
 #################### Path Constants ####################
 REPO_PATH = Path(os.getenv("REPO_DIR","/home/ymentha/Documents/Cours/dlab_project/emoji_dataset"))
-REF_PATH = REPO_PATH.joinpath("emoji2vec/emoji2vec/")
-MAPPING_PATH = str(REF_PATH.joinpath("data/word2vec/emoji_mapping.p"))
-E2V_PATH = str(REF_PATH.joinpath("pre-trained/emoji2vec.bin"))
-W2V_PATH = str(REF_PATH.joinpath("data/word2vec/GoogleNews-vectors-negative300.bin"))
-DATA_PATH = str(REF_PATH.joinpath("data/raw_training_data/emoji_joined.txt"))
+E2V_REPO_PATH = REPO_PATH.joinpath("emoji2vec/emoji2vec/")
+E2V_MODEL_PATH = str(E2V_REPO_PATH.joinpath("pre-trained/emoji2vec.bin"))
+E2V_DATA_DIR = REPO_PATH.joinpath("data/raw/e2v")
+E2V_MAPPING_PATH = str(E2V_DATA_DIR.joinpath("word2vec/emoji_mapping.p"))
+W2V_PATH = str(E2V_DATA_DIR.joinpath("word2vec/GoogleNews-vectors-negative300.bin"))
+DATA_PATH = str(E2V_DATA_DIR.joinpath("raw_training_data/emoji_joined.txt"))
 
 
 ############################## MT2GF ##############################
@@ -572,8 +573,12 @@ PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
 # Dataset Analysis
 # Path to the raw data of the collected emoji dataset
 EMOJI_DATASET_DIR = REPO_PATH.joinpath("data/raw/forms/dataset")
-EMOJI_DATASET_EXPORT_DIR = REPO_PATH.joinpath("data/processed/dataset")
+# training data formatted for w2v embeddings
+EMBEDDING_TRAINING_DATA_DIR = REPO_PATH.joinpath("data/processed/embed_training")
 EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
 # List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
 LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")
 EXPORT_DIR = REPO_PATH.joinpath("results")
+
+# TSNE Results
+EMOJI_FONT_PATH = REPO_PATH.joinpath("data/external/apple_color_emoji.ttf")

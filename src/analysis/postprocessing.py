@@ -223,7 +223,6 @@ def generate_dataset(input_dir, lshtein, voc_size):
 
     N = sum([df.shape[0] for df in form_dfs])
     print(f"Initial data shape: {N} rows")
-
     # Repeat outsiders
     if voc_size is not None:
         n_frauders, form_dfs = filter_out(
@@ -250,21 +249,21 @@ def plot_nmb_form_per_worker(tot_df,ax=None,fig=None):
 def main():
     # Parameters
     input_dir = EMOJI_DATASET_DIR
-    output_dir = EXPORT_DIR.joinpath("data/")
-    output_dir.mkdir(exist_ok=True,parents=True)
+    export_dir = EXPORT_DIR.joinpath("data/dataset")
+    export_dir.mkdir(exist_ok=True,parents=True)
     lshtein = 3
     voc_size = 0.8
 
     # Dataset creation
     dataset_df = generate_dataset(input_dir,lshtein,voc_size)
-    dataset_df.to_csv(output_dir.joinpath("emoji_dataset_prod.csv"))
+    dataset_df.to_csv(export_dir.joinpath("emoji_dataset_prod.csv"),index=False)
 
     # Workers demographic information
     worker_infos = build_worker_info_table(input_directory=input_dir, verbose=True)
-    worker_infos.to_csv(output_dir.joinpath("demographic_info.csv"))
+    worker_infos.to_csv(export_dir.joinpath("demographic_info.csv"))
 
     # Dataset Statistics
-    export_dir = EXPORT_DIR.joinpath("plots/dataset_stats")
+    export_dir = EXPORT_DIR.joinpath("report_files")
     export_dir.mkdir(exist_ok=True,parents=True)
     fig,axes = plt.subplots(1,2,figsize=(15,5))
     plot_hist_nmb_anot_per_emoji(dataset_df)
@@ -274,20 +273,18 @@ def main():
     plot_nmb_form_per_worker(dataset_df,fig=fig,ax=ax)
     plt.savefig(export_dir.joinpath("form_per_worker.jpeg"))
 
-
-
     # Save most varied, most constant and sample of the datset
     np.random.seed(14)
-    output_dir = EXPORT_DIR.joinpath("latex_samples/")
-    output_dir.mkdir(exist_ok=True,parents=True)
+    export_dir = EXPORT_DIR.joinpath("report_files/")
+    export_dir.mkdir(exist_ok=True,parents=True)
     var_df,cstt_df = get_varied_cstt_results(dataset_df)
     sample_df = dataset_df.sample(15)
     worker_sample = worker_infos.sample(5)
 
-    write_to_latex(output_dir.joinpath("varied.tex"),var_df)
-    write_to_latex(output_dir.joinpath("cstt.tex"),cstt_df)
-    write_to_latex(output_dir.joinpath("sample.tex"),sample_df)
-    write_to_latex(output_dir.joinpath("worker_sample.tex"),worker_sample,index=True)
+    write_to_latex(export_dir.joinpath("varied.tex"),var_df)
+    write_to_latex(export_dir.joinpath("cstt.tex"),cstt_df)
+    write_to_latex(export_dir.joinpath("sample.tex"),sample_df)
+    write_to_latex(export_dir.joinpath("worker_sample.tex"),worker_sample,index=True)
 
 def plot_hist_nmb_anot_per_emoji(tot_df,axes=None,fig=None):
     """
@@ -323,15 +320,15 @@ if __name__ == '__main__':
         "-l", "--lshtein", help="Tolerance for the honeypots inputs in terms of Levenshtein distance",type=float, default=None
     )
     parser.add_argument(
-        "-o", "--output_dir", help="Output path for the production format of the dataset",
+        "-o", "--export_dir", help="Output path for the production format of the dataset",
         default="/app/results"
     )
     args = parser.parse_args()
 
     input_dir = args.input_dir
-    output_dir = args.output_dir
+    export_dir = args.export_dir
     lshtein = args.lshtein
     voc_size = args.voc_size
     dataset_df = generate_dataset(input_dir, lshtein, voc_size)
-    dataset_df.to_csv(output_dir.joinpath("emoji_dataset_prod.csv"))
+    dataset_df.to_csv(export_dir.joinpath("emoji_dataset_prod.csv"))
 

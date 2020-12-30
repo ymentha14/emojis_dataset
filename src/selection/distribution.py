@@ -178,7 +178,7 @@ def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=
 
 def main():
     # Export path creation
-    export_dir = EXPORT_DIR.joinpath("plots/distribution")
+    export_dir = EXPORT_DIR.joinpath("report_files")
     export_dir.mkdir(exist_ok=True,parents=True)
 
     # Loading of pilot data
