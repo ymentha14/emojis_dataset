@@ -1,0 +1,2 @@
+model_checkpoint_path: "/app/results/data/word2vec/em_dataset/model.ckpt"
+all_model_checkpoint_paths: "/app/results/data/word2vec/em_dataset/model.ckpt"

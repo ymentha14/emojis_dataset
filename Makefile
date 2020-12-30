@@ -45,6 +45,7 @@ run_container:
 	-v ${WORD2VEC_DIR}:/app/emoji2vec/emoji2vec/data/word2vec \
 	-v ${RESULTS_DIR}:/app/results \
 	-v ${CREDS_DIR}:/app/creds \
+	-v ${REPO_DIR}/emoji2vec:/app/emoji2vec \
 	-p 8080:8080 \
 	-p 8888:8888 \
 	emoji_dataset

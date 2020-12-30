@@ -232,7 +232,7 @@ def generate_dataset(input_dir, lshtein, voc_size):
     if lshtein is not None:
         n_honey, form_dfs = filter_out(
         form_dfs, detect_honey_frauders, HONEYPOTS, dist_lshtein=lshtein, verbose=True)
-
+    
     dataset_df = generate_production_format(form_dfs)
     return dataset_df
 

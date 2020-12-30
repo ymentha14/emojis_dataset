@@ -567,7 +567,7 @@ TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
 FORMS_DIR = REPO_PATH.joinpath("data/raw/forms")
 PILOTS_DIR = FORMS_DIR.joinpath("pilots")
 PILOT_0_DIR = PILOTS_DIR.joinpath("0_emoji10")
-PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
+PILOT_1_DIR = PILOTS_DIR.joinpath("1mplcairo_asymptotic")
 
 
 # Dataset Analysis
@@ -578,7 +578,7 @@ EMBEDDING_TRAINING_DATA_DIR = REPO_PATH.joinpath("data/processed/embed_training"
 EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
 # List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
 LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")
-EXPORT_DIR = REPO_PATH.joinpath("results")
+EXPORT_DIR = REPO_PATH.joinpath("results2")
 
 # TSNE Results
 EMOJI_FONT_PATH = REPO_PATH.joinpath("data/external/apple_color_emoji.ttf")
