@@ -93,7 +93,7 @@ def main(model_type,use_faces=False,use_words=False):
         tsne_plot(e2v, mapping.values(),fig=fig,ax=ax)
 
     model_type = model_type + "_tsne.jpeg"
-    plt.savefig(EXPORT_DIR.joinpath(model_type))
+    plt.savefig(EXPORT_DIR.joinpath("report_files/" + model_type))
 
 
 

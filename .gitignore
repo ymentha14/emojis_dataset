@@ -13,6 +13,7 @@ data/raw/tweets/
 build/
 develop-eggs/
 results/*
+results2/*
 dist/
 downloads/
 eggs/

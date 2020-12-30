@@ -581,4 +581,4 @@ LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")
 EXPORT_DIR = REPO_PATH.joinpath("results2")
 
 # TSNE Results
-EMOJI_FONT_PATH = REPO_PATH.joinpath("data/external/apple_color_emoji.ttf")
+EMOJI_FONT_PATH = REPO_PATH.joinpath("data/external/Apple Color Emoji.ttf")
