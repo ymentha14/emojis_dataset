@@ -515,7 +515,7 @@ E2V_MODEL_PATH = str(E2V_REPO_PATH.joinpath("pre-trained/emoji2vec.bin"))
 E2V_DATA_DIR = REPO_PATH.joinpath("data/raw/e2v")
 E2V_MAPPING_PATH = str(E2V_DATA_DIR.joinpath("word2vec/emoji_mapping.p"))
 W2V_PATH = str(E2V_DATA_DIR.joinpath("word2vec/GoogleNews-vectors-negative300.bin"))
-DATA_PATH = str(E2V_DATA_DIR.joinpath("raw_training_data/emoji_joined.txt"))
+E2V_DATA_PATH = str(E2V_DATA_DIR.joinpath("raw_training_data/emoji_joined.txt"))
 
 
 ############################## MT2GF ##############################
@@ -537,7 +537,6 @@ FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/raw/forms/pilots/test_runs")
 # Directory where the watcher can store the downloaded csv files
 WATCHER_FORMS_RESULTS_DIR = REPO_PATH.joinpath("data/mt2gf_cache/watcher")
 ##################################################################
-
 
 # Em2Png
 PNG_DIR = REPO_PATH.joinpath("data/raw/emojis_png/")
@@ -562,12 +561,11 @@ TWEET_EM_COUNT_PATH = TWEET_DIR.joinpath("em_counts.csv")
 TWEET_PATH = TWEET_DIR.joinpath("tweet_600.csv")
 TWEET_PATHS_PATH = REPO_PATH.joinpath("data/external/tweet_paths.pk")
 
-
 # Google Forms Data
 FORMS_DIR = REPO_PATH.joinpath("data/raw/forms")
 PILOTS_DIR = FORMS_DIR.joinpath("pilots")
 PILOT_0_DIR = PILOTS_DIR.joinpath("0_emoji10")
-PILOT_1_DIR = PILOTS_DIR.joinpath("1mplcairo_asymptotic")
+PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
 
 
 # Dataset Analysis
@@ -578,7 +576,7 @@ EMBEDDING_TRAINING_DATA_DIR = REPO_PATH.joinpath("data/processed/embed_training"
 EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
 # List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
 LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")
-EXPORT_DIR = REPO_PATH.joinpath("results2")
+EXPORT_DIR = REPO_PATH.joinpath("results")
 
 # TSNE Results
 EMOJI_FONT_PATH = REPO_PATH.joinpath("data/external/Apple Color Emoji.ttf")

@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
 import tensorflow as tf
 import pickle as pk
 import numpy as np
@@ -109,7 +110,7 @@ def get_train_val_test(dataset_df):
 
 def compute_w2v_data():
     # We read the data we just produced
-    dataset_df = pd.read_csv(EXPORT_DIR.joinpath("data/dataindex_colset/emoji_dataset_prod.csv"))
+    dataset_df = pd.read_csv(EXPORT_DIR.joinpath("data/dataset/emoji_dataset_prod.csv"))
     # and create/save the word2vec data from it
     train_df, dev_df, test_df = get_train_val_test(dataset_df)
     train_df.to_csv(EMBEDDING_TRAINING_DATA_DIR.joinpath("train.txt"),sep="\t",header=None,index=False)
@@ -122,7 +123,7 @@ def main(model_type="em_dataset"):
     if model_type == "em_dataset":
         # compute word2vec complient data
         compute_w2v_data()
-        export_dir = EXPORT_DIR.joinpath("data/word2vec/em_dataset")
+        export_dir = EXPORT_DIR.joinpath("data/embeddings/word2vec/em_dataset")
         export_dir.mkdir(exist_ok=True,parents=True)
         word2vec_path = str(W2V_PATH)
         data_dir = str(EMBEDDING_TRAINING_DATA_DIR)
@@ -132,7 +133,7 @@ def main(model_type="em_dataset"):
         e2v_path = str(export_dir.joinpath("emoji2vec.bin"))
         dataset_name = "emojis_dataset"
     else:
-        export_dir = EXPORT_DIR.joinpath("data/word2vec/e2v")
+        export_dir = EXPORT_DIR.joinpath("data/embeddings/word2vec/e2v")
         export_dir.mkdir(exist_ok=True,parents=True)
         word2vec_path = str(W2V_PATH)
         # data src dir
@@ -146,6 +147,11 @@ def main(model_type="em_dataset"):
     pos_ex = 4
     neg_ratio = 1
     max_epochs = 40
+
+    # debug mode
+    if os.environ['DEBUG'] is not None:
+        max_epochs = 2
+
     dropout = 0.0
 
     params = ModelParams(in_dim=in_dim, out_dim=out_dim, pos_ex=pos_ex, max_epochs=max_epochs,
