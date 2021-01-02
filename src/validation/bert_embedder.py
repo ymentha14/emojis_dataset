@@ -18,7 +18,7 @@ class BertEmbedder():
     def embed_word(self,word,embed_dim=1):
 
         # debug mode
-        if os.environ['DEBUG'] is not None:
+        if os.environ.get('DEBUG') is not None:
             return np.zeros(768)
 
         # Add the special tokens.

@@ -1,4 +1,5 @@
-import matplotlib, mplcairo
+import matplotlib
+#import mplcairo
 #matplotlib.use("module://mplcairo.qt")
 
 #matplotlib.use("cairo")
