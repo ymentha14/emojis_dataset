@@ -42,7 +42,7 @@ def tsne_plot(e2v, em_list, name="emojis_tsne", fontsize=12, w2v=None, word_list
         embedding = embedding + [w2v.get_vector(word) for word in word_list]
     embedding = np.array(embedding)
     n_iter = 5000
-    if os.environ['DEBUG'] is not None:
+    if os.environ.get('DEBUG') is not None:
         n_iter = 500
     tsne = man.TSNE(perplexity=30, n_components=2, init="pca", n_iter=n_iter, verbose=1)
     trans = tsne.fit_transform(embedding)
@@ -57,6 +57,7 @@ def tsne_plot(e2v, em_list, name="emojis_tsne", fontsize=12, w2v=None, word_list
     if word_list is not None:
         for word, vec in zip(word_list, trans[len(em_list) :]):
             ax.annotate(word, xy=vec, textcoords="data", fontsize=8)
+    
 
     plt.grid()
 
@@ -118,7 +119,7 @@ def main(model_type,embedding_type,use_faces=False,use_words=False):
     else:
         print("Computing tsne for all emojis")
         tsne_plot(e2v, mapping.values(),fig=fig,ax=ax)
-
+    ax.set_title(f"TSNE embedding of {model_type} using {embedding_type}",fontsize=25)
     out_path = f"{model_type}_{embedding_type}_tsne.jpeg"
     plt.savefig(EXPORT_DIR.joinpath("report_files/" + out_path))
 

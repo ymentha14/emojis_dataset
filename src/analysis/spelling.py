@@ -1,6 +1,7 @@
 import pkg_resources
 from symspellpy import SymSpell, Verbosity
 from collections import Counter
+import os
 import numpy as np
 import torch
 from transformers import AutoTokenizer, BertForMaskedLM
@@ -10,6 +11,13 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 import enchant
 import operator
 from pdb import set_trace
+from src.constants import EXPORT_DIR
+
+def d_print(msg):
+    path = EXPORT_DIR.joinpath("report_files/word_correction.txt")
+    path.parent.mkdir(exist_ok=True,parents=True)
+    print(msg, file=open(path,"a+"))
+    print(msg)
 
 
 class WordSuggester:
@@ -20,9 +28,9 @@ class WordSuggester:
     def __init__(
         self,
     ):
-        print("Initializing the vocabulary set..")
+        d_print("Initializing the vocabulary set..")
         self.d = enchant.Dict("en_US")
-        print("Initializing BERT pipeline..")
+        d_print("Initializing BERT pipeline..")
 
         self.tok = AutoTokenizer.from_pretrained("bert-base-uncased")
         self.bert = BertForMaskedLM.from_pretrained("bert-base-uncased")
@@ -193,6 +201,10 @@ class WordSuggester:
         Returns:
             [list of str]: corrected words
         """
+        if os.environ.get('DEBUG') is not None:
+            d_print("Test --> test")
+            d_print("Test --> test")
+            return context
         context_suggestions = self.get_context_suggestions(context)
         corr_words = self.extract_context_suggestions(context_suggestions)
         if verbose:
@@ -201,9 +213,9 @@ class WordSuggester:
             ):
                 status  = suggestions["status"]
                 if status == "notfound":
-                    print(f"Nof found:  {word}")
+                    d_print(f"Nof found:  {word}")
                 elif status not in ["present","exist"] and word != corr_word:
-                    print(f"Modified:  {word} --> {corr_word} ({status})")
+                    d_print(f"Modified:  {word} --> {corr_word} ({status})")
 
         return corr_words
 
@@ -214,8 +226,6 @@ class WordSuggester:
         grouped_df = form_df.groupby('emoji')
         # TODO: remove the limitation
         em_indexes = [(key,val) for key,val in grouped_df.groups.items()]
-        if debug:
-            em_indexes = em_indexes[:30]
 
         for emoji,indexes in tqdm(em_indexes):
             group = grouped_df.get_group(emoji)['word']

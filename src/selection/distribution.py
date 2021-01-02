@@ -12,8 +12,9 @@ from IPython.core.debugger import set_trace
 from scipy.spatial import distance
 from src.exploration.form10_eda import read_form, str2vocab
 from src.constants import (COLOR1,COLOR2,COLOR3,COLOR4,
-                           EXPORT_DIR, PILOT_1_DIR)
+                           EXPORT_DIR, PILOT_1_DIR,TITLE_SIZE,LABEL_SIZE)
 import seaborn as sns
+import os
 sns.set()
 
 
@@ -151,8 +152,8 @@ def plot_trajectories(em_serie, ax=None, N_TRAJ=20, rand_norm_traj=False):
     mean_traj.plot(ax=ax, color=COLOR3, label="mean")
     median_traj.plot(ax=ax, color=COLOR2, label="median")
     # labels
-    ax.set_xlabel("nmb of annotation")
-    ax.set_ylabel("JS divergence btwn steps N and N+1")
+    ax.set_xlabel("nmb of annotation",fontsize=23)
+    ax.set_ylabel("JS divergence btwn steps N and N+1",fontsize=28)
     ax.legend()
 
 
@@ -164,8 +165,12 @@ def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=
         fig, axes = plt.subplots(3, 3, figsize=(15, 15))
     fig.tight_layout()
     fig.subplots_adjust(top=0.95)
-    fig.suptitle('Incremental Jensen-Shannon divergence for vocabulary distribution', fontsize=20)
+    fig.suptitle('Incremental Jensen-Shannon divergence for vocabulary distribution', fontsize=25)
     axes = axes.reshape(-1)
+
+    if os.environ.get('DEBUG') is not None:
+        axes = axes[:2]
+
     for ax, col in zip(axes, form_df.columns):
         print(col, end="")
         plot_trajectories(form_df[col], ax, rand_norm_traj=rand_norm_traj)

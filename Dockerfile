@@ -9,6 +9,7 @@ RUN apt-get update && \
     apt-get -y install nodejs
 
 RUN apt-get -y install make
+RUN apt-get install -y enchant
 
 RUN python3 -m venv env
 

@@ -7,9 +7,10 @@ from IPython.display import display
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from src.constants import COLOR1,COLOR2,EXPORT_DIR,EMOJIS, HONEYPOTS, EMOJI_2_TOP_INDEX_PATH, LANGUAGES_PATH, EMOJI_DATASET_DIR
+from src.constants import LABEL_SIZE,TITLE_SIZE,COLOR1,COLOR2,EXPORT_DIR,EMOJIS, HONEYPOTS, EMOJI_2_TOP_INDEX_PATH, LANGUAGES_PATH, EMOJI_DATASET_DIR
 import pickle as pk
 from pdb import set_trace
+from src.analysis.spelling import WordSuggester
 import Levenshtein
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -234,6 +235,8 @@ def generate_dataset(input_dir, lshtein, voc_size):
         form_dfs, detect_honey_frauders, HONEYPOTS, dist_lshtein=lshtein, verbose=True)
     
     dataset_df = generate_production_format(form_dfs)
+    sugg = WordSuggester()
+    sugg.correct_prod_df(dataset_df)
     return dataset_df
 
 def plot_nmb_form_per_worker(tot_df,ax=None,fig=None):
@@ -242,9 +245,9 @@ def plot_nmb_form_per_worker(tot_df,ax=None,fig=None):
     form_per_worker = (tot_df.groupby('WorkerID')['FormId']
                              .agg(lambda x: len(set(x))))
     form_per_worker.hist(ax=ax,color=COLOR2)
-    ax.set_xlabel("Number of form answered")
-    ax.set_ylabel("Number of workers")
-    ax.set_title("Histogram of number of forms answered per worker")
+    ax.set_xlabel("Number of form answered",fontsize=LABEL_SIZE)
+    ax.set_ylabel("Number of workers",fontsize=LABEL_SIZE)
+    ax.set_title("Histogram of number of forms answered per worker",fontsize=TITLE_SIZE)
 
 def main():
     # Parameters
@@ -295,17 +298,17 @@ def plot_hist_nmb_anot_per_emoji(tot_df,axes=None,fig=None):
     ax = axes[0]
     val_counts = tot_df['emoji'].value_counts()
     val_counts.hist(ax=ax,color=COLOR1)
-    ax.set_xlabel("Number of annotations")
-    ax.set_ylabel("Number of emojis")
-    ax.set_title("Histogram of annotations number per emojis")
-    
+    ax.set_xlabel("Number of annotations",fontsize=LABEL_SIZE)
+    ax.set_ylabel("Number of emojis",fontsize=LABEL_SIZE)
+    ax.set_title("Histogram of annotations number per emojis",fontsize=TITLE_SIZE)
+
     ax = axes[1]
     voc_size_per_emoji = tot_df.groupby('emoji')['word'].agg(lambda x: len(set(x)))
     voc_size_per_emoji = voc_size_per_emoji / val_counts
     voc_size_per_emoji.hist(ax=ax,bins=25,color=COLOR1)
-    ax.set_xlabel('Size of vocabulary/word')
-    ax.set_ylabel('Number of emojis')
-    ax.set_title('Histogram of normalized vocabulary size')
+    ax.set_xlabel('Size of vocabulary/word',fontsize=LABEL_SIZE)
+    ax.set_ylabel('Number of emojis',fontsize=LABEL_SIZE)
+    ax.set_title('Histogram of normalized vocabulary size',fontsize=TITLE_SIZE)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

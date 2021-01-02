@@ -149,7 +149,7 @@ def main(model_type="em_dataset"):
     max_epochs = 40
 
     # debug mode
-    if os.environ['DEBUG'] is not None:
+    if os.environ.get('DEBUG') is not None:
         max_epochs = 2
 
     dropout = 0.0

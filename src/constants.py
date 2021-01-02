@@ -580,3 +580,5 @@ EXPORT_DIR = REPO_PATH.joinpath("results")
 
 # TSNE Results
 EMOJI_FONT_PATH = REPO_PATH.joinpath("data/external/Apple Color Emoji.ttf")
+TITLE_SIZE = 23
+LABEL_SIZE = 19

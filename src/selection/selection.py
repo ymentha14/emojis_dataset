@@ -22,7 +22,7 @@ import pickle as pk
 from numpy.random import permutation
 import pdb, traceback, sys
 from src.constants import (flags,em_letters,em_numbers,em_hours,TWEET_EM_COUNT_PATH,TWEET_PATHS_PATH,
-                           EXPORT_DIR,TWEET_PATH,TWEET_SAMPLES_DIR,COLOR1,COLOR2)
+                           EXPORT_DIR,TWEET_PATH,TWEET_SAMPLES_DIR,COLOR1,COLOR2,TITLE_SIZE,LABEL_SIZE)
 
 from src.utils import tononymize_list,genderonymize_list,keep_fe0f_emojis
 warnings.filterwarnings("ignore")
@@ -224,9 +224,9 @@ def plot_top_10(em_df,ax=None):
     for em in top10.index:
         print(em,end="")
         top10.plot.bar(ax=ax,color=COLOR1)
-    ax.set_xlabel("Top 10 most used emojis")
-    ax.set_ylabel("Proportion of total use")
-    ax.set_title("Proportion of total use of top 10 most used emojis")
+    ax.set_xlabel("Top 10 most used emojis",fontsize=LABEL_SIZE)
+    ax.set_ylabel("Proportion of total use",fontsize=LABEL_SIZE)
+    ax.set_title("Proportion of total use of top 10 most used emojis",fontsize=TITLE_SIZE)
 
 
 
@@ -241,9 +241,9 @@ def display_cover_app_ratio(em_df, ax=None):
     df["tot_ratio"] = df["counts"].cumsum() / df["counts"].sum()
     df["tot_ratio"].reset_index().head(1000).plot(ax=ax,color=COLOR1)
     ax.get_legend().remove()
-    ax.set_xlabel("# of emojis [sorted wrt counts]")
-    ax.set_ylabel("Ratio of Covered emojis apparition")
-    ax.set_title("Covered emojis apparition ratio")
+    ax.set_xlabel("nmb of emojis [sorted wrt counts]",fontsize=LABEL_SIZE)
+    ax.set_ylabel("Ratio of Covered emojis apparition",fontsize=LABEL_SIZE)
+    ax.set_title("Covered emojis apparition ratio",fontsize=TITLE_SIZE)
 
 
 def display_log_hist(em_df, ax=None):
@@ -264,7 +264,7 @@ def display_log_hist(em_df, ax=None):
     ax.axvline(q75, color="green", label="q75")
     ax.axvline(q99, color="red", label="q99")
     ax.legend()
-    ax.set_title("Log histogram of counts for emojis")
+    ax.set_title("Log histogram of counts for emojis",fontsize=TITLE_SIZE)
     print(f"Q25:{q25}")
     print(f"Q50:{q50}")
     print(f"Q75:{q75}")
