@@ -1,8 +1,7 @@
 import matplotlib
-#import mplcairo
-#matplotlib.use("module://mplcairo.qt")
+# import mplcairo
+# matplotlib.use("module://mplcairo.qt")
 
-#matplotlib.use("cairo")
 import os
 import matplotlib.pyplot as plt
 import tensorflow as tf

@@ -21,9 +21,21 @@ def limit_memory(maxsize):
     soft, hard = resource.getrlimit(resource.RLIMIT_AS)
     resource.setrlimit(resource.RLIMIT_AS, (maxsize, maxsize))
 
+def em_2_unicode(em):
+    """
+    Takes into account the NotoEmoji package for lualatex 
+    """
+    if len(em) > 1:
+        return "?"
+    hex_rep = hex(ord(em)).split("x")[1].upper()
+    return '{\\NotoEmoji \symbol{"%s} }' % (hex_rep)
+
 def write_to_latex(path,df,index=False):
+    df = df.copy()
+    if 'emoji' in df.columns:
+        df['emoji'] = df['emoji'].apply(em_2_unicode)
     with open(path,"w") as f:
-        f.write(df.to_latex(index=index,label="fig::" + path.stem))
+        f.write(df.to_latex(index=index,label="fig::" + path.stem,escape=False))
 
 def extract_emojis(text, find_tone=False):
     """

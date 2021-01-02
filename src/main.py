@@ -16,18 +16,18 @@ def print_sep(title):
 
 if __name__ == '__main__':
     try:
-        # print_sep("Selection")
-        # selection()
+        print_sep("Selection")
+        selection()
 
-        # print_sep("Distribution")
-        # distribution()
+        print_sep("Distribution")
+        distribution()
 
-        # print_sep("Dataset generation")
-        # dataset_generation()
+        print_sep("Dataset generation")
+        dataset_generation()
 
-        # print_sep("Word2vec training")
-        # w2v("e2v")
-        # w2v("em_dataset")
+        print_sep("Word2vec training")
+        w2v("e2v")
+        w2v("em_dataset")
 
         print_sep("BERT embedding")
         bert_embedder("e2v")

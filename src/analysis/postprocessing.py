@@ -300,15 +300,15 @@ def plot_hist_nmb_anot_per_emoji(tot_df,axes=None,fig=None):
     val_counts.hist(ax=ax,color=COLOR1)
     ax.set_xlabel("Number of annotations",fontsize=LABEL_SIZE)
     ax.set_ylabel("Number of emojis",fontsize=LABEL_SIZE)
-    ax.set_title("Histogram of annotations number per emojis",fontsize=TITLE_SIZE)
+    ax.set_title("Histogram of annotations count per emojis",fontsize=20)
 
     ax = axes[1]
     voc_size_per_emoji = tot_df.groupby('emoji')['word'].agg(lambda x: len(set(x)))
     voc_size_per_emoji = voc_size_per_emoji / val_counts
     voc_size_per_emoji.hist(ax=ax,bins=25,color=COLOR1)
-    ax.set_xlabel('Size of vocabulary/word',fontsize=LABEL_SIZE)
+    ax.set_xlabel('Size of vocabulary/annotation',fontsize=LABEL_SIZE)
     ax.set_ylabel('Number of emojis',fontsize=LABEL_SIZE)
-    ax.set_title('Histogram of normalized vocabulary size',fontsize=TITLE_SIZE)
+    ax.set_title('Histogram of normalized vocabulary size',fontsize=20)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

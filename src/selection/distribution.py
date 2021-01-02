@@ -152,8 +152,8 @@ def plot_trajectories(em_serie, ax=None, N_TRAJ=20, rand_norm_traj=False):
     mean_traj.plot(ax=ax, color=COLOR3, label="mean")
     median_traj.plot(ax=ax, color=COLOR2, label="median")
     # labels
-    ax.set_xlabel("nmb of annotation",fontsize=23)
-    ax.set_ylabel("JS divergence btwn steps N and N+1",fontsize=28)
+    ax.set_xlabel("nmb of annotation",fontsize=14)
+    ax.set_ylabel("JS-div btwn steps N and N+1",fontsize=20)
     ax.legend()
 
 
@@ -165,7 +165,7 @@ def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=
         fig, axes = plt.subplots(3, 3, figsize=(15, 15))
     fig.tight_layout()
     fig.subplots_adjust(top=0.95)
-    fig.suptitle('Incremental Jensen-Shannon divergence for vocabulary distribution', fontsize=25)
+    fig.suptitle('Incremental Jensen-Shannon divergence for vocabulary distribution', fontsize=30)
     axes = axes.reshape(-1)
 
     if os.environ.get('DEBUG') is not None:
