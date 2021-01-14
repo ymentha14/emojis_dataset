@@ -7,16 +7,18 @@ import torch
 from transformers import AutoTokenizer, BertForMaskedLM
 from tqdm import tqdm
 import logging
+
 logging.getLogger("transformers").setLevel(logging.ERROR)
 import enchant
 import operator
 from pdb import set_trace
 from src.constants import EXPORT_DIR
 
+
 def d_print(msg):
     path = EXPORT_DIR.joinpath("report_files/word_correction.txt")
-    path.parent.mkdir(exist_ok=True,parents=True)
-    print(msg, file=open(path,"a+"))
+    path.parent.mkdir(exist_ok=True, parents=True)
+    print(msg, file=open(path, "a+"))
     print(msg)
 
 
@@ -34,15 +36,19 @@ class WordSuggester:
 
         self.tok = AutoTokenizer.from_pretrained("bert-base-uncased")
         self.bert = BertForMaskedLM.from_pretrained("bert-base-uncased")
-        self.sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-        self.sym_spell_cut = SymSpell(max_dictionary_edit_distance=0, prefix_length=7)
+        self.sym_spell = SymSpell(
+            max_dictionary_edit_distance=2, prefix_length=7)
+        self.sym_spell_cut = SymSpell(
+            max_dictionary_edit_distance=0, prefix_length=7)
         dictionary_path = pkg_resources.resource_filename(
             "symspellpy", "frequency_dictionary_en_82_765.txt"
         )
         # term_index is the column of the term and count_index is the
         # column of the term frequency
-        self.sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
-        self.sym_spell_cut.load_dictionary(dictionary_path, term_index=0, count_index=1)
+        self.sym_spell.load_dictionary(
+            dictionary_path, term_index=0, count_index=1)
+        self.sym_spell_cut.load_dictionary(
+            dictionary_path, term_index=0, count_index=1)
 
     def cross_word_validate(self, word, word_counts, min_counts=2):
         """
@@ -51,24 +57,27 @@ class WordSuggester:
         tot = sum(word_counts.values())
         return word_counts[word] >= min_counts
 
-    def is_multiword(self,word):
+    def is_multiword(self, word):
         suggestions = self.d.suggest(word)
         for sugg in suggestions:
             if "".join(sugg.split(" ")) == word:
-                return True,sugg
+                return True, sugg
             if "".join(sugg.split("-")) == word:
-                return True,sugg.replace("-"," ")
-        return False,""
+                return True, sugg.replace("-", " ")
+        return False, ""
 
-    def cross_sugg_validate(self,word,word_counts):
-        suggestions = [s.term for s in self.sym_spell.lookup(
-            word, Verbosity.CLOSEST, max_edit_distance=2
-        )]
-        present_words = {word:count for word,count in word_counts.items() if word in suggestions}
+    def cross_sugg_validate(self, word, word_counts):
+        suggestions = [
+            s.term
+            for s in self.sym_spell.lookup(word, Verbosity.CLOSEST, max_edit_distance=2)
+        ]
+        present_words = {
+            word: count for word, count in word_counts.items() if word in suggestions
+        }
         if len(present_words) == 0:
-            return False,""
+            return False, ""
         corr_word = max(present_words.items(), key=operator.itemgetter(1))[0]
-        return True,corr_word
+        return True, corr_word
 
     def get_word_suggestions(self, word, word_counts):
         """
@@ -90,7 +99,7 @@ class WordSuggester:
 
         # If the suggestions associated to the word appear in the rest of the answers
         # we keep the most common one
-        cross_sugg,corr_word = self.cross_sugg_validate(word,word_counts)
+        cross_sugg, corr_word = self.cross_sugg_validate(word, word_counts)
         if cross_sugg:
             return {"status": "cross_suggested", "words": [corr_word]}
 
@@ -102,20 +111,22 @@ class WordSuggester:
             return {"status": "disassembled1", "words": [result.corrected_string]}
 
         # Same approach using another library
-        is_multi,corr_word = self.is_multiword(word)
+        is_multi, corr_word = self.is_multiword(word)
         if is_multi:
             return {"status": "disassembled2", "words": [corr_word]}
 
         # We use the other words as a context to select among the suggestions
-        suggestions = [sugg.term for sugg in self.sym_spell.lookup(
-            word, Verbosity.CLOSEST, max_edit_distance=2
-        )]
+        suggestions = [
+            sugg.term
+            for sugg in self.sym_spell.lookup(
+                word, Verbosity.CLOSEST, max_edit_distance=2
+            )
+        ]
         if len(suggestions) > 0:
             return {"status": "corrected", "words": suggestions}
 
         # The word is probably unknown
         return {"status": "notfound", "words": [word]}
-
 
     def get_context_suggestions(self, word_list):
         """
@@ -156,7 +167,8 @@ class WordSuggester:
 
         logits = self.bert(torch.tensor([input_tokens]))[0][0]
         logits = logits[answer_pos]
-        suggestions_tokens = [self.tok.encode(word)[1:-1] for word in suggestions]
+        suggestions_tokens = [self.tok.encode(
+            word)[1:-1] for word in suggestions]
         scores = [
             np.mean([logits[i].item() for i in tokens]) for tokens in suggestions_tokens
         ]
@@ -201,7 +213,7 @@ class WordSuggester:
         Returns:
             [list of str]: corrected words
         """
-        if os.environ.get('DEBUG') is not None:
+        if os.environ.get("DEBUG") is not None:
             d_print("Test --> test")
             d_print("Test --> test")
             return context
@@ -211,24 +223,24 @@ class WordSuggester:
             for word, suggestions, corr_word in zip(
                 context, context_suggestions, corr_words
             ):
-                status  = suggestions["status"]
+                status = suggestions["status"]
                 if status == "notfound":
                     d_print(f"Nof found:  {word}")
-                elif status not in ["present","exist"] and word != corr_word:
+                elif status not in ["present", "exist"] and word != corr_word:
                     d_print(f"Modified:  {word} --> {corr_word} ({status})")
 
         return corr_words
 
-    def correct_prod_df(self,form_df,debug=False):
+    def correct_prod_df(self, form_df, debug=False):
         """
         Correct inplace mispelled words of a dataframe in productions format
         """
-        grouped_df = form_df.groupby('emoji')
+        grouped_df = form_df.groupby("emoji")
         # TODO: remove the limitation
-        em_indexes = [(key,val) for key,val in grouped_df.groups.items()]
+        em_indexes = [(key, val) for key, val in grouped_df.groups.items()]
 
-        for emoji,indexes in tqdm(em_indexes):
-            group = grouped_df.get_group(emoji)['word']
+        for emoji, indexes in tqdm(em_indexes):
+            group = grouped_df.get_group(emoji)["word"]
             words = group.to_list()
-            corr_words = self.process_context(words,verbose=True)
-            form_df['word'].loc[indexes] = corr_words
+            corr_words = self.process_context(words, verbose=True)
+            form_df["word"].loc[indexes] = corr_words

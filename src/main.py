@@ -11,10 +11,12 @@ import pdb
 import sys
 import traceback
 
-def print_sep(title):
-    print("\n\n" + "=" * 15 +f" {title} "+ "=" * 15)
 
-if __name__ == '__main__':
+def print_sep(title):
+    print("\n\n" + "=" * 15 + f" {title} " + "=" * 15)
+
+
+if __name__ == "__main__":
     try:
         print_sep("Selection")
         selection()
@@ -34,16 +36,12 @@ if __name__ == '__main__':
         bert_embedder("em_dataset")
 
         print_sep("TSNE plot computation")
-        tsne("e2v",embedding_type="w2v")
-        tsne("em_dataset",embedding_type="w2v")
-        tsne("e2v",embedding_type="bert")
-        tsne("em_dataset",embedding_type="bert")
+        tsne("e2v", embedding_type="w2v")
+        tsne("em_dataset", embedding_type="w2v")
+        tsne("e2v", embedding_type="bert")
+        tsne("em_dataset", embedding_type="bert")
     except:
         # debugger
         extype, value, tb = sys.exc_info()
         traceback.print_exc()
         pdb.post_mortem()
-
-
-
-

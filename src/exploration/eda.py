@@ -35,8 +35,10 @@ import gensim.models as gs
 
 def get_desc_emojis_df(phraseVecModel):
     """create the emojis description dataframe with respective embeddings"""
-    desc_words_df = pd.read_csv(DATA_PATH, sep="\t", header=None, names=["desc", "em"])
-    desc_words_df["vec"] = desc_words_df["desc"].apply(lambda x: phraseVecModel[x])
+    desc_words_df = pd.read_csv(
+        DATA_PATH, sep="\t", header=None, names=["desc", "em"])
+    desc_words_df["vec"] = desc_words_df["desc"].apply(
+        lambda x: phraseVecModel[x])
     return desc_words_df
 
 
@@ -109,7 +111,8 @@ def get_10_faces(em, e2v, num_faces=5):
     topn = num_faces
     faces = [i[0] for i in e2v.similar_by_word(em, topn=topn)]
     while not (
-        all([face in emotions_faces for face in faces]) and len(faces) == num_faces
+        all([face in emotions_faces for face in faces]
+            ) and len(faces) == num_faces
     ):
         topn += 1
         faces = [i[0] for i in e2v.similar_by_word(em, topn=topn)]

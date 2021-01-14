@@ -11,10 +11,19 @@ import matplotlib.pyplot as plt
 from IPython.core.debugger import set_trace
 from scipy.spatial import distance
 from src.exploration.form10_eda import read_form, str2vocab
-from src.constants import (COLOR1,COLOR2,COLOR3,COLOR4,
-                           EXPORT_DIR, PILOT_1_DIR,TITLE_SIZE,LABEL_SIZE)
+from src.constants import (
+    COLOR1,
+    COLOR2,
+    COLOR3,
+    COLOR4,
+    EXPORT_DIR,
+    PILOT_1_DIR,
+    TITLE_SIZE,
+    LABEL_SIZE,
+)
 import seaborn as sns
 import os
+
 sns.set()
 
 
@@ -133,12 +142,14 @@ def plot_trajectories(em_serie, ax=None, N_TRAJ=20, rand_norm_traj=False):
     if ax is None:
         fig, ax = plt.subplots(1)
 
-    trajectories = [pd.Series(build_trajectory(em_serie)) for i in range(N_TRAJ)]
+    trajectories = [pd.Series(build_trajectory(em_serie))
+                    for i in range(N_TRAJ)]
 
     N = em_serie.shape[0]
     random_traj = pd.Series(compute_random_trajectory(N))
     if rand_norm_traj:
-        trajectories = [(random_traj - traj) / random_traj for traj in trajectories]
+        trajectories = [(random_traj - traj) /
+                        random_traj for traj in trajectories]
     else:
         random_traj.plot(ax=ax, color=COLOR4, label="random_ref")
 
@@ -152,12 +163,14 @@ def plot_trajectories(em_serie, ax=None, N_TRAJ=20, rand_norm_traj=False):
     mean_traj.plot(ax=ax, color=COLOR3, label="mean")
     median_traj.plot(ax=ax, color=COLOR2, label="median")
     # labels
-    ax.set_xlabel("nmb of annotation",fontsize=14)
-    ax.set_ylabel("JS-div btwn steps N and N+1",fontsize=20)
+    ax.set_xlabel("nmb of annotation", fontsize=14)
+    ax.set_ylabel("JS-div btwn steps N and N+1", fontsize=20)
     ax.legend()
 
 
-def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=None,fig=None):
+def plot_multi_trajectories(
+    form_df, rand_norm_traj=False, log_scale=False, axes=None, fig=None
+):
     """
     Plot the random trajectories as in plot_trajectories for the 9 first emojis of form_df
     """
@@ -165,10 +178,12 @@ def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=
         fig, axes = plt.subplots(3, 3, figsize=(15, 15))
     fig.tight_layout()
     fig.subplots_adjust(top=0.95)
-    fig.suptitle('Incremental Jensen-Shannon divergence for vocabulary distribution', fontsize=30)
+    fig.suptitle(
+        "Incremental Jensen-Shannon divergence for vocabulary distribution", fontsize=30
+    )
     axes = axes.reshape(-1)
 
-    if os.environ.get('DEBUG') is not None:
+    if os.environ.get("DEBUG") is not None:
         axes = axes[:2]
 
     for ax, col in zip(axes, form_df.columns):
@@ -181,28 +196,27 @@ def plot_multi_trajectories(form_df, rand_norm_traj=False, log_scale=False,axes=
             # ax.set_ylim((0,y_lim))
             ax.set_yscale("log")
 
+
 def main():
     # Export path creation
     export_dir = EXPORT_DIR.joinpath("report_files")
-    export_dir.mkdir(exist_ok=True,parents=True)
+    export_dir.mkdir(exist_ok=True, parents=True)
 
     # Loading of pilot data
-    asymp_df1 = read_form(PILOT_1_DIR.joinpath("Asymptotic_Emoji_Agreement_1.csv"))
-    asymp_df1.drop(columns=['👕','🚓','🇵🇱','💱'],inplace=True)
-    asymp_df2 = read_form(PILOT_1_DIR.joinpath("Asymptotic_Emoji_Agreement_2.csv"))
-    asymp_df = pd.concat([asymp_df1,asymp_df2],axis=0)
+    asymp_df1 = read_form(PILOT_1_DIR.joinpath(
+        "Asymptotic_Emoji_Agreement_1.csv"))
+    asymp_df1.drop(columns=["👕", "🚓", "🇵🇱", "💱"], inplace=True)
+    asymp_df2 = read_form(PILOT_1_DIR.joinpath(
+        "Asymptotic_Emoji_Agreement_2.csv"))
+    asymp_df = pd.concat([asymp_df1, asymp_df2], axis=0)
     asymp_df = str2vocab(asymp_df)
 
     # Plot 1
     fig, axes = plt.subplots(3, 3, figsize=(15, 15))
-    plot_multi_trajectories(asymp_df,log_scale=True,fig=fig,axes=axes)
+    plot_multi_trajectories(asymp_df, log_scale=True, fig=fig, axes=axes)
     plt.savefig(export_dir.joinpath("distribution.jpeg"))
 
     # Plot 2
     fig, axes = plt.subplots(3, 3, figsize=(15, 15))
-    plot_multi_trajectories(asymp_df,rand_norm_traj=True,fig=fig,axes=axes)
+    plot_multi_trajectories(asymp_df, rand_norm_traj=True, fig=fig, axes=axes)
     plt.savefig(export_dir.joinpath("distribution_norm.jpeg"))
-
-
-
-

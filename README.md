@@ -104,7 +104,7 @@ and playing with the outlier detection parameters (repeating outliers/honeypot o
 
 The following files are available in the directory referred to by the `RESULTS_DIR` environment variable:
 
-#### Dataset
+#### Dataset ( _`RESULTS_DIR/data/dataset`_ )
 `emoji_dataset_prod.csv`: Output file containing the words used to describe the emojis presenting the following columns
   * **WorkerID**: mturk id of the worker
   * **FormId**: index of the form the emoji was part of (10 emojis/form)

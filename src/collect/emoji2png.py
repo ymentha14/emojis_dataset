@@ -41,7 +41,8 @@ def print_and_capture(
     output_dir_png = Path(output_dir_png)
     not_empty = any(output_dir_png.glob("*.png"))
     if not_empty:
-        raise ValueError("Directory not empty: please provide an empty directory.")
+        raise ValueError(
+            "Directory not empty: please provide an empty directory.")
 
     bbox = (x, y, x + width, y + height)
 

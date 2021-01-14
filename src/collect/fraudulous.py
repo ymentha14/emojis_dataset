@@ -30,12 +30,15 @@ from pdb import set_trace
 from src.utils import extract_emojis
 
 ###################### SINGLE WORD ######################
+
+
 def detect_repeat_frauders(form_df, threshold=0.8):
     """
     Detect the fraudulous workers i.e. the one who repeated the same word too many times
     """
     form_df = form_df.copy()
-    columns = [col for col in form_df.columns if col not in ["Timestamp", "WorkerID"]]
+    columns = [col for col in form_df.columns if col not in [
+        "Timestamp", "WorkerID"]]
     form_df["vocsize"] = form_df[columns].apply(lambda x: len(set(x)), axis=1)
     fraud_workers = form_df[form_df["vocsize"] < threshold * len(columns)][
         "WorkerID"
@@ -60,7 +63,8 @@ def detect_honey_frauders(form_df, honeypots, dist_lshtein=2):
         corr_words = honeypots[em]
         form_df[em] = form_df[em].apply(
             lambda word: min(
-                [Levenshtein.distance(word, corr_word) for corr_word in corr_words]
+                [Levenshtein.distance(word, corr_word)
+                 for corr_word in corr_words]
             )
             > dist_lshtein
         )
@@ -86,7 +90,8 @@ def get_wrong_honey_entries(form_df, honeypots, dist_lshtein=2):
         corr_words = honeypots[em]
         form_df[em] = form_df[em].apply(
             lambda word: min(
-                [Levenshtein.distance(word, corr_word) for corr_word in corr_words]
+                [Levenshtein.distance(word, corr_word)
+                 for corr_word in corr_words]
             )
             > dist_lshtein
         )
@@ -139,7 +144,8 @@ def get_users_duplicate(form_df, ratio=0.9):
     n_cols = form_df.shape[1]
     # transform the strings in frozen sets
     form_df = form_df.applymap(lambda x: frozenset(x.split(",")))
-    duplicate_mask = form_df.apply(lambda x: len(set(x)) < int(n_cols * ratio), axis=1)
+    duplicate_mask = form_df.apply(lambda x: len(
+        set(x)) < int(n_cols * ratio), axis=1)
     return duplicate_mask
 
 
@@ -180,7 +186,8 @@ def plot_voc(tot_voc, fraud):
     bins = 10
     tot_voc_true = tot_voc[~tot_voc.index.isin(fraud)]
     tot_voc_fraud = tot_voc[tot_voc.index.isin(fraud)]
-    ax.hist([tot_voc_true, tot_voc_fraud], color=[COLOR_TRUE, COLOR_FRAUD], bins=bins)
+    ax.hist([tot_voc_true, tot_voc_fraud], color=[
+            COLOR_TRUE, COLOR_FRAUD], bins=bins)
     ax.set_xlabel("Voc size")
     ax.set_ylabel("Users count")
     ax.legend()
@@ -215,7 +222,8 @@ def get_vec_error(form_df, w2v, e2v, ref="mean", loss="l1"):
         mean_vecs = [e2v.get_vector(em) for em in form_df.columns]
     # normalize
     if loss == "l2":
-        vec_error = (vec_error - mean_vecs).applymap(lambda x: x ** 2).applymap(sum)
+        vec_error = (
+            vec_error - mean_vecs).applymap(lambda x: x ** 2).applymap(sum)
     else:
         assert loss == "l1"
         vec_error = abs(vec_error - mean_vecs).applymap(sum)
