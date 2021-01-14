@@ -121,7 +121,11 @@ The following files are available in the directory referred to by the `RESULTS_D
   * **Gender**: gender of the worker
   *  **Mothertongue**: mothertongue of the worker
 
-
+In addition, you can recreate all the figures and embeddings referred in the report by running
+```
+python src/main.py
+```
+The results will once again be present in `RESULTS_DIR`. (takes ~10min to generate all embeddings.)
 
 **NB**: Emojis Dataset uses the [Mturk2Gform](https://github.com/ymentha14/mturk2gform) package, which was itself developped in the context of this project.
 
@@ -148,18 +152,13 @@ Project Structure
     │       ├── emojis_png
     │       ├── forms
     │       └── tweets
-    ├── dist
+    ├── dist <-- wheel for mt2gf
     │   ├── mt2gf-0.1.0-py3-none-any.whl
     │   ├── mt2gf-0.1.0.tar.gz
     │   └── mt2gf.whl
     ├── Dockerfile
     ├── docs
-    │   ├── commands.rst
-    │   ├── conf.py
-    │   ├── getting-started.rst
-    │   ├── index.rst
-    │   ├── make.bat
-    │   └── Makefile
+    │   ├── repor.pdf <-- report file
     ├── emoji2vec
     │   ├── emoji2vec
     │   └── setup.py
@@ -205,8 +204,6 @@ Project Structure
         └── visualization
             ├── __init__.py
             └── tsne_viz.py
-
-
 --------
 
 ## Usage
