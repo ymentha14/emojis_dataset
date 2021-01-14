@@ -14,29 +14,21 @@
 </p>
 
 
+- [About the Project](#about-the-project)
+- [Dataset Specifications](#dataset-specifications)
+- [Getting Started](#getting-started)
+  * [Notebooks](#notebooks)
+  * [Dataset Generation](#dataset-generation)
+    + [Dataset ( _`RESULTS_DIR/data/dataset`_ )](#dataset-----results-dir-data-dataset----)
+    + [Demographic Information](#demographic-information)
+  * [Figures and embeddings generation](#figures-and-embeddings-generation)
+  * [Notebooks](#notebooks-1)
+- [Project Structure](#project-structure)
+- [License](#license)
+- [Contact](#contact)
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#1-prerequisites">Prerequisites</a></li>
-        <li><a href="#2-installation">Installation</a></li>
-        <li><a href="#3-credentials-settings">Credentials Settings</a></li>
-        <li><a href="#4-forms-generation">Forms Generation</a></li>
-      </ul>
-    </li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
+
+
 
 
 
@@ -55,10 +47,10 @@ Emojis Dataset consists of single-word descriptions of the 1325 most common emoj
 * Language: English (US)
 * Start Gathering Date: 09/12/20
 * End Gathering Data: 12/12/20
-* Total XXX Annotations
-* Min XXX annotations/emoji
-* Max XXX annotations/emoji
-* Average XXX annotations/emoji
+* Total 37862 Annotations
+* Min 22 annotations/emoji
+* Max 33 annotations/emoji
+* Average 28.5 annotations/emoji
 * Emojis present in the dataset:
 
 ```
@@ -121,6 +113,8 @@ The following files are available in the directory referred to by the `RESULTS_D
   * **Gender**: gender of the worker
   *  **Mothertongue**: mothertongue of the worker
 
+### Figures and embeddings generation
+
 In addition, you can recreate all the figures and embeddings referred in the report by running
 ```
 python src/main.py
@@ -129,11 +123,14 @@ The results will once again be present in `RESULTS_DIR`. (takes ~10min to genera
 
 **NB**: Emojis Dataset uses the [Mturk2Gform](https://github.com/ymentha14/mturk2gform) package, which was itself developped in the context of this project.
 
+### Notebooks
+
+The Emojis Dataset project is divided in 8 parts: each of these parts has a respective commented notebook in the `notebooks` folder.
+
+
 
 Project Structure
 ------------
-
-
     .
     ├── creds
     │   ├── aws.csv
@@ -205,9 +202,6 @@ Project Structure
             ├── __init__.py
             └── tsne_viz.py
 --------
-
-## Usage
-The Emojis Dataset project is divided in 8 parts: each of these parts has a respective commented notebook in the `notebooks` folder.
 
 
 
