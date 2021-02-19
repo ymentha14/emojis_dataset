@@ -13,30 +13,23 @@
 
 </p>
 
+## Table of Content
+
+- [About the Project](#about-the-project)
+- [Dataset Specifications](#dataset-specifications)
+- [Getting Started](#getting-started)
+  * [Notebooks](#notebooks)
+  * [Dataset Generation](#dataset-generation)
+    + [Dataset ( _`RESULTS_DIR/data/dataset`_ )](#dataset-----results-dir-data-dataset----)
+    + [Demographic Information](#demographic-information)
+  * [Figures and embeddings generation](#figures-and-embeddings-generation)
+  * [Notebooks](#notebooks-1)
+- [Project Structure](#project-structure)
+- [License](#license)
+- [Contact](#contact)
 
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#1-prerequisites">Prerequisites</a></li>
-        <li><a href="#2-installation">Installation</a></li>
-        <li><a href="#3-credentials-settings">Credentials Settings</a></li>
-        <li><a href="#4-forms-generation">Forms Generation</a></li>
-      </ul>
-    </li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
+
 
 
 
@@ -44,21 +37,20 @@
 
 As emojis became a central part of digital communication in the last decades, being able to represent these emojis in an appropriate semantic space  becomes a crucial aspect in Natural Language Processing to extract the meaning of a sentence.
 
-Emojis Dataset consists of single-word descriptions of the 1325 most common emojis. This allows to represent emojis in the same feature space as word in any NLP model
+Emojis Dataset consists of single-word descriptions of the 1325 most common emojis. This allows to represent emojis in the same feature space as words in any NLP model, therefore providing crucial insights in the emotions carried by a given sentence.
 
 
-* makes use of mt2gf
-* specifications (30 etc)
+This repository makes use of [mturk2gform](https://github.com/ymentha14/mturk2gform). Refer to this page any documentation regarding pipelines synchronization.
 
 ## Dataset Specifications
 *Each annotation consists of a human describing one emoji with one word*
 * Language: English (US)
 * Start Gathering Date: 09/12/20
 * End Gathering Data: 12/12/20
-* Total XXX Annotations
-* Min XXX annotations/emoji
-* Max XXX annotations/emoji
-* Average XXX annotations/emoji
+* Total 37862 Annotations
+* Min 22 annotations/emoji
+* Max 33 annotations/emoji
+* Average 28.5 annotations/emoji
 * Emojis present in the dataset:
 
 ```
@@ -104,7 +96,7 @@ and playing with the outlier detection parameters (repeating outliers/honeypot o
 
 The following files are available in the directory referred to by the `RESULTS_DIR` environment variable:
 
-#### Dataset
+#### Dataset ( _`RESULTS_DIR/data/dataset`_ )
 `emoji_dataset_prod.csv`: Output file containing the words used to describe the emojis presenting the following columns
   * **WorkerID**: mturk id of the worker
   * **FormId**: index of the form the emoji was part of (10 emojis/form)
@@ -121,15 +113,24 @@ The following files are available in the directory referred to by the `RESULTS_D
   * **Gender**: gender of the worker
   *  **Mothertongue**: mothertongue of the worker
 
+### Figures and embeddings generation
 
+In addition, you can recreate all the figures and embeddings referred in the report by running
+```
+python src/main.py
+```
+The results will once again be present in `RESULTS_DIR`. (takes ~10min to generate all embeddings.)
 
 **NB**: Emojis Dataset uses the [Mturk2Gform](https://github.com/ymentha14/mturk2gform) package, which was itself developped in the context of this project.
+
+### Notebooks
+
+The Emojis Dataset project is divided in 8 parts: each of these parts has a respective commented notebook in the `notebooks` folder.
+
 
 
 Project Structure
 ------------
-
-
     .
     ├── creds
     │   ├── aws.csv
@@ -148,18 +149,13 @@ Project Structure
     │       ├── emojis_png
     │       ├── forms
     │       └── tweets
-    ├── dist
+    ├── dist <-- wheel for mt2gf
     │   ├── mt2gf-0.1.0-py3-none-any.whl
     │   ├── mt2gf-0.1.0.tar.gz
     │   └── mt2gf.whl
     ├── Dockerfile
     ├── docs
-    │   ├── commands.rst
-    │   ├── conf.py
-    │   ├── getting-started.rst
-    │   ├── index.rst
-    │   ├── make.bat
-    │   └── Makefile
+    │   ├── repor.pdf <-- report file
     ├── emoji2vec
     │   ├── emoji2vec
     │   └── setup.py
@@ -205,12 +201,7 @@ Project Structure
         └── visualization
             ├── __init__.py
             └── tsne_viz.py
-
-
 --------
-
-## Usage
-The Emojis Dataset project is divided in 8 parts: each of these parts has a respective commented notebook in the `notebooks` folder.
 
 
 

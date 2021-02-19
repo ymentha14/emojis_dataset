@@ -20,11 +20,27 @@ from IPython.core.debugger import set_trace
 import warnings
 import pickle as pk
 from numpy.random import permutation
-import pdb, traceback, sys
-from src.constants import (flags,em_letters,em_numbers,em_hours,TWEET_EM_COUNT_PATH,TWEET_PATHS_PATH,
-                           EXPORT_DIR,TWEET_PATH,TWEET_SAMPLES_DIR,COLOR1,COLOR2,TITLE_SIZE,LABEL_SIZE)
+import pdb
+import traceback
+import sys
+from src.constants import (
+    flags,
+    em_letters,
+    em_numbers,
+    em_hours,
+    TWEET_EM_COUNT_PATH,
+    TWEET_PATHS_PATH,
+    EXPORT_DIR,
+    TWEET_PATH,
+    TWEET_SAMPLES_DIR,
+    COLOR1,
+    COLOR2,
+    TITLE_SIZE,
+    LABEL_SIZE,
+)
 
-from src.utils import tononymize_list,genderonymize_list,keep_fe0f_emojis
+from src.utils import tononymize_list, genderonymize_list, keep_fe0f_emojis
+
 warnings.filterwarnings("ignore")
 sns.set()
 
@@ -62,7 +78,8 @@ def load_or_compute_tweetpaths(tweetpaths_path):
 
         subpaths = np.random.permutation(list(main_path.iterdir()))
         # we are only interested in the twitter_stream directories
-        subpaths = [path for path in subpaths if path.stem.startswith("twitter_stream")]
+        subpaths = [
+            path for path in subpaths if path.stem.startswith("twitter_stream")]
         tweet_paths = [
             tweet_path
             for subpath in subpaths
@@ -215,20 +232,21 @@ def get_tot_emoji_ratio(em_set):
     absent_emojis = set(emoji.UNICODE_EMOJI) - set(em_set)
     return len(em_set) / len(emoji.UNICODE_EMOJI)
 
-def plot_top_10(em_df,ax=None):
+
+def plot_top_10(em_df, ax=None):
     if ax is None:
         fig, ax = plt.subplots(1)
     tot_count = em_df.sum()
     top10 = em_df.head(10) / tot_count
 
     for em in top10.index:
-        print(em,end="")
-        top10.plot.bar(ax=ax,color=COLOR1)
-    ax.set_xlabel("Top 10 most used emojis",fontsize=LABEL_SIZE)
-    ax.set_ylabel("Proportion of total use",fontsize=LABEL_SIZE)
-    ax.set_title("Proportion of total use of top 10 most used emojis",fontsize=TITLE_SIZE)
-
-
+        print(em, end="")
+        top10.plot.bar(ax=ax, color=COLOR1)
+    ax.set_xlabel("Top 10 most used emojis", fontsize=LABEL_SIZE)
+    ax.set_ylabel("Proportion of total use", fontsize=LABEL_SIZE)
+    ax.set_title(
+        "Proportion of total use of top 10 most used emojis", fontsize=TITLE_SIZE
+    )
 
 
 def display_cover_app_ratio(em_df, ax=None):
@@ -239,11 +257,11 @@ def display_cover_app_ratio(em_df, ax=None):
         fig, ax = plt.subplots(1)
     df = em_df.to_frame(name="counts")
     df["tot_ratio"] = df["counts"].cumsum() / df["counts"].sum()
-    df["tot_ratio"].reset_index().head(1000).plot(ax=ax,color=COLOR1)
+    df["tot_ratio"].reset_index().head(1000).plot(ax=ax, color=COLOR1)
     ax.get_legend().remove()
-    ax.set_xlabel("nmb of emojis [sorted wrt counts]",fontsize=LABEL_SIZE)
-    ax.set_ylabel("Ratio of Covered emojis apparition",fontsize=LABEL_SIZE)
-    ax.set_title("Covered emojis apparition ratio",fontsize=TITLE_SIZE)
+    ax.set_xlabel("nmb of emojis [sorted wrt counts]", fontsize=LABEL_SIZE)
+    ax.set_ylabel("Ratio of Covered emojis apparition", fontsize=LABEL_SIZE)
+    ax.set_title("Covered emojis apparition ratio", fontsize=TITLE_SIZE)
 
 
 def display_log_hist(em_df, ax=None):
@@ -252,7 +270,7 @@ def display_log_hist(em_df, ax=None):
     """
     if ax is None:
         fig, ax = plt.subplots(1)
-    em_df.hist(ax=ax, bins=50,color=COLOR1)
+    em_df.hist(ax=ax, bins=50, color=COLOR1)
     ax.set_yscale("log")
     q25, q50, q75, q99 = (
         em_df.quantile(0.25),
@@ -264,13 +282,14 @@ def display_log_hist(em_df, ax=None):
     ax.axvline(q75, color="green", label="q75")
     ax.axvline(q99, color="red", label="q99")
     ax.legend()
-    ax.set_title("Log histogram of counts for emojis",fontsize=TITLE_SIZE)
+    ax.set_title("Log histogram of counts for emojis", fontsize=TITLE_SIZE)
     print(f"Q25:{q25}")
     print(f"Q50:{q50}")
     print(f"Q75:{q75}")
     print(f"Q99:{q99}")
 
-def estimate_covered_ratio(em_df,emojis):
+
+def estimate_covered_ratio(em_df, emojis):
     """
     Estimates the ratios of uses covered by the emojis set wrt to em_df value_counts
 
@@ -296,7 +315,7 @@ def estimate_covered_ratio(em_df,emojis):
 def main():
     # Export path creation
     selection_export_dir = EXPORT_DIR.joinpath("report_files")
-    selection_export_dir.mkdir(exist_ok=True,parents=True)
+    selection_export_dir.mkdir(exist_ok=True, parents=True)
 
     # Loading of the value counts
     em_df = load_or_compute_em_df(TWEET_EM_COUNT_PATH)
@@ -304,12 +323,12 @@ def main():
     print(f"Approx {ratio* 100:.2f}% of all emojis covered by the tweeter data")
 
     # Top 10 proportion
-    fig,ax = plt.subplots(1, figsize=(10, 5))
-    plot_top_10(em_df,ax=ax)
+    fig, ax = plt.subplots(1, figsize=(10, 5))
+    plot_top_10(em_df, ax=ax)
     plt.savefig(selection_export_dir.joinpath("top10.jpeg"))
 
     # Covered emojis ratio
-    fig,ax = plt.subplots(1, figsize=(10, 5))
+    fig, ax = plt.subplots(1, figsize=(10, 5))
     display_cover_app_ratio(em_df, ax=ax)
     plt.savefig(selection_export_dir.joinpath("covered_emojis.jpeg"))
 
@@ -317,7 +336,9 @@ def main():
     emojis = set(emoji.UNICODE_EMOJI.keys())
     print(f"Original length:{len(emojis)}")
 
-    emojis = [em for em in emojis if em not in (flags + em_letters + em_numbers + em_hours)]
+    emojis = [
+        em for em in emojis if em not in (flags + em_letters + em_numbers + em_hours)
+    ]
     print(f"Removing flags and letters and numbers:{len(emojis)}")
 
     emojis = tononymize_list(emojis)
@@ -330,17 +351,15 @@ def main():
     print(f"Removing fe0f equivalent:{len(emojis)}")
     print("=" * 24 + "\n")
     print(f"Total number of emojis {len(emojis)}\n")
-    estimate_covered_ratio(em_df,emojis)
+    estimate_covered_ratio(em_df, emojis)
 
     ratio = get_tot_emoji_ratio(emojis)
     print(f"Approx {ratio*100:.2f}% of all emojis covered by the selection")
 
 
-
-
 if __name__ == "__main__":
     try:
-        #compute_twitter_data(TWEET_PATH)
+        # compute_twitter_data(TWEET_PATH)
         main()
     except:
         extype, value, tb = sys.exc_info()

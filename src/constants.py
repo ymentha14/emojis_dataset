@@ -62,7 +62,7 @@ HONEYPOTS = {
     "🍉": ["watermelon", "melon"],
     "🍋": ["lemon", "lime", "mango", "lemonade"],
     "🍌": ["banana", "potassium"],
-    "🍍": ["ananas","pineapple"],
+    "🍍": ["ananas", "pineapple"],
     "🍎": ["apple", "fruit", "health"],
     "🍓": ["strawberry", "strawberries"],
     "🍔": ["burger", "hamburger", "cheeseburger", "food"],
@@ -509,13 +509,17 @@ sex_symbols = ["\u2640", "\u2642", "\u2640\ufe0f", "\u2642\ufe0f"]
 
 
 #################### Path Constants ####################
-REPO_PATH = Path(os.getenv("REPO_DIR","/home/ymentha/Documents/Cours/dlab_project/emoji_dataset"))
+REPO_PATH = Path(
+    os.getenv("REPO_DIR", "/home/ymentha/Documents/Cours/dlab_project/emoji_dataset")
+)
 E2V_REPO_PATH = REPO_PATH.joinpath("emoji2vec/emoji2vec/")
 E2V_MODEL_PATH = str(E2V_REPO_PATH.joinpath("pre-trained/emoji2vec.bin"))
 E2V_DATA_DIR = REPO_PATH.joinpath("data/raw/e2v")
 E2V_MAPPING_PATH = str(E2V_DATA_DIR.joinpath("word2vec/emoji_mapping.p"))
-W2V_PATH = str(E2V_DATA_DIR.joinpath("word2vec/GoogleNews-vectors-negative300.bin"))
-E2V_DATA_PATH = str(E2V_DATA_DIR.joinpath("raw_training_data/emoji_joined.txt"))
+W2V_PATH = str(E2V_DATA_DIR.joinpath(
+    "word2vec/GoogleNews-vectors-negative300.bin"))
+E2V_DATA_PATH = str(E2V_DATA_DIR.joinpath(
+    "raw_training_data/emoji_joined.txt"))
 
 
 ############################## MT2GF ##############################
@@ -546,9 +550,11 @@ PNG_PATH = PNG_DIR.joinpath("all")
 # List of selected emojis for dataset collection
 SELECTED_EMOJIS_PATH = PNG_DIR.joinpath("pickles/selected_emojis.pk")
 # Mapping of all emojis to a global index
-EMOJI_2_GLOBAL_INDEX_PATH = PNG_DIR.joinpath("pickles/emojis_2_global_index.pk")
+EMOJI_2_GLOBAL_INDEX_PATH = PNG_DIR.joinpath(
+    "pickles/emojis_2_global_index.pk")
 # Global indexes of selected emojis for dataset collection
-SELECTED_GLOBAL_INDEXES_PATH = PNG_DIR.joinpath("pickles/selected_global_indexes.pk")
+SELECTED_GLOBAL_INDEXES_PATH = PNG_DIR.joinpath(
+    "pickles/selected_global_indexes.pk")
 # Mapping of selected emojis to a selected index
 EMOJI_2_TOP_INDEX_PATH = PNG_DIR.joinpath("pickles/emojis_2_top_indexes.pk")
 ########################################################
@@ -572,7 +578,8 @@ PILOT_1_DIR = PILOTS_DIR.joinpath("1_asymptotic")
 # Path to the raw data of the collected emoji dataset
 EMOJI_DATASET_DIR = REPO_PATH.joinpath("data/raw/forms/dataset")
 # training data formatted for w2v embeddings
-EMBEDDING_TRAINING_DATA_DIR = REPO_PATH.joinpath("data/processed/embed_training")
+EMBEDDING_TRAINING_DATA_DIR = REPO_PATH.joinpath(
+    "data/processed/embed_training")
 EM_VOC_COUNT = REPO_PATH.joinpath("data/processed/dataset/stats/em_voc.txt")
 # List of languages from http://www2.harpercollege.edu/mhealy/g101ilec/intro/clt/cltclt/top100.html
 LANGUAGES_PATH = REPO_PATH.joinpath("data/external/languages.csv")

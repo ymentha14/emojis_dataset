@@ -7,7 +7,18 @@ from IPython.display import display
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-from src.constants import LABEL_SIZE,TITLE_SIZE,COLOR1,COLOR2,EXPORT_DIR,EMOJIS, HONEYPOTS, EMOJI_2_TOP_INDEX_PATH, LANGUAGES_PATH, EMOJI_DATASET_DIR
+from src.constants import (
+    LABEL_SIZE,
+    TITLE_SIZE,
+    COLOR1,
+    COLOR2,
+    EXPORT_DIR,
+    EMOJIS,
+    HONEYPOTS,
+    EMOJI_2_TOP_INDEX_PATH,
+    LANGUAGES_PATH,
+    EMOJI_DATASET_DIR,
+)
 import pickle as pk
 from pdb import set_trace
 from src.analysis.spelling import WordSuggester
@@ -15,10 +26,17 @@ import Levenshtein
 from pathlib import Path
 import matplotlib.pyplot as plt
 import argparse
-from src.analysis.fraudulous import filter_out, detect_honey_frauders, detect_repeat_frauders,study_outsiders
+from src.analysis.fraudulous import (
+    filter_out,
+    detect_honey_frauders,
+    detect_repeat_frauders,
+    study_outsiders,
+)
 from src.utils import write_to_latex
 import seaborn as sns
+
 sns.set()
+
 
 def get_emojis_voc_counts(path):
     """
@@ -95,7 +113,8 @@ def parse_language(target_word, word_list):
         return None
     if target_word == "en":
         return "english"
-    distances = [(word, Levenshtein.distance(target_word, word)) for word in word_list]
+    distances = [(word, Levenshtein.distance(target_word, word))
+                 for word in word_list]
     best_word, min_dist = min(distances, key=lambda x: x[1])
     check_pairs = [pair[0] for pair in distances if pair[1] == min_dist]
     if len(check_pairs) > 1:
@@ -115,7 +134,8 @@ def build_worker_info_table(input_directory, verbose=False):
     input_directory = Path(input_directory)
     worker_infos = []
     for path in input_directory.glob("**/[0-9]*.csv"):
-        df = pd.read_csv(path, usecols=["WorkerID", "Age", "Gender", "Mothertongue"])
+        df = pd.read_csv(
+            path, usecols=["WorkerID", "Age", "Gender", "Mothertongue"])
         worker_infos.append(df)
     worker_infos = pd.concat(worker_infos, axis=0)
 
@@ -152,8 +172,7 @@ def scrap_form_results(dataset_dir):
     """
     dataset_dir = Path(dataset_dir)
     worker_infos = build_worker_info_table(
-            input_directory=dataset_dir, verbose=False
-    )
+        input_directory=dataset_dir, verbose=False)
     form_dfs = []
     paths = list(dataset_dir.glob("**/[0-9]*.csv"))
     for path in tqdm(paths):
@@ -167,7 +186,8 @@ def scrap_form_results(dataset_dir):
         df = pd.merge(df, comp_time, how="left", on=["WorkerID", "FormId"])
 
         # Recover demographic information about workers (Age, sex etc)
-        df.drop(columns=["Age", "Gender", "Mothertongue", "Feedback"], inplace=True)
+        df.drop(columns=["Age", "Gender", "Mothertongue",
+                         "Feedback"], inplace=True)
         df = pd.merge(df, worker_infos, how="left", on=["WorkerID"])
 
         form_dfs.append(df)
@@ -206,16 +226,22 @@ def generate_production_format(form_dfs):
                 emoji_index = selem2indx[em]
                 data.append((wid, formid, duration, emoji_index, em, word))
     data = pd.DataFrame(
-        data, columns=["WorkerID", "FormId", "Duration", "emoji_index", "emoji", "word"]
+        data, columns=["WorkerID", "FormId",
+                       "Duration", "emoji_index", "emoji", "word"]
     ).sort_values("emoji_index")
     return data
 
+
 def get_varied_cstt_results(tot_df):
-    voc_df = (tot_df.groupby('emoji')['word'].agg(lambda x: len(set(x)))
-                .sort_values(ascending = False).index)
-    varied_em_df = tot_df[tot_df['emoji'] == voc_df[0]].sample(5)
-    cstt_em_df = tot_df[tot_df['emoji'] == voc_df[-3]].sample(5)
-    return varied_em_df,cstt_em_df
+    voc_df = (
+        tot_df.groupby("emoji")["word"]
+        .agg(lambda x: len(set(x)))
+        .sort_values(ascending=False)
+        .index
+    )
+    varied_em_df = tot_df[tot_df["emoji"] == voc_df[0]].sample(5)
+    cstt_em_df = tot_df[tot_df["emoji"] == voc_df[-3]].sample(5)
+    return varied_em_df, cstt_em_df
 
 
 def generate_dataset(input_dir, lshtein, voc_size):
@@ -227,104 +253,135 @@ def generate_dataset(input_dir, lshtein, voc_size):
     # Repeat outsiders
     if voc_size is not None:
         n_frauders, form_dfs = filter_out(
-        form_dfs, detect_repeat_frauders, min_voc_size=voc_size, verbose=True, display_=False)
+            form_dfs,
+            detect_repeat_frauders,
+            min_voc_size=voc_size,
+            verbose=True,
+            display_=False,
+        )
 
     # Honeypots outsiders
     if lshtein is not None:
         n_honey, form_dfs = filter_out(
-        form_dfs, detect_honey_frauders, HONEYPOTS, dist_lshtein=lshtein, verbose=True)
-    
+            form_dfs,
+            detect_honey_frauders,
+            HONEYPOTS,
+            dist_lshtein=lshtein,
+            verbose=True,
+        )
+
     dataset_df = generate_production_format(form_dfs)
     sugg = WordSuggester()
     sugg.correct_prod_df(dataset_df)
     return dataset_df
 
-def plot_nmb_form_per_worker(tot_df,ax=None,fig=None):
+
+def plot_nmb_form_per_worker(tot_df, ax=None, fig=None):
     if ax is None or fig is None:
-        fig,ax = plt.subplots(1, figsize=(10, 5))
-    form_per_worker = (tot_df.groupby('WorkerID')['FormId']
-                             .agg(lambda x: len(set(x))))
-    form_per_worker.hist(ax=ax,color=COLOR2)
-    ax.set_xlabel("Number of form answered",fontsize=LABEL_SIZE)
-    ax.set_ylabel("Number of workers",fontsize=LABEL_SIZE)
-    ax.set_title("Histogram of number of forms answered per worker",fontsize=TITLE_SIZE)
+        fig, ax = plt.subplots(1, figsize=(10, 5))
+    form_per_worker = tot_df.groupby(
+        "WorkerID")["FormId"].agg(lambda x: len(set(x)))
+    form_per_worker.hist(ax=ax, color=COLOR2)
+    ax.set_xlabel("Number of form answered", fontsize=LABEL_SIZE)
+    ax.set_ylabel("Number of workers", fontsize=LABEL_SIZE)
+    ax.set_title(
+        "Histogram of number of forms answered per worker", fontsize=TITLE_SIZE
+    )
+
 
 def main():
     # Parameters
     input_dir = EMOJI_DATASET_DIR
     export_dir = EXPORT_DIR.joinpath("data/dataset")
-    export_dir.mkdir(exist_ok=True,parents=True)
+    export_dir.mkdir(exist_ok=True, parents=True)
     lshtein = 3
     voc_size = 0.8
 
     # Dataset creation
-    dataset_df = generate_dataset(input_dir,lshtein,voc_size)
-    dataset_df.to_csv(export_dir.joinpath("emoji_dataset_prod.csv"),index=False)
+    dataset_df = generate_dataset(input_dir, lshtein, voc_size)
+    dataset_df.to_csv(export_dir.joinpath(
+        "emoji_dataset_prod.csv"), index=False)
 
     # Workers demographic information
-    worker_infos = build_worker_info_table(input_directory=input_dir, verbose=True)
+    worker_infos = build_worker_info_table(
+        input_directory=input_dir, verbose=True)
     worker_infos.to_csv(export_dir.joinpath("demographic_info.csv"))
 
     # Dataset Statistics
     export_dir = EXPORT_DIR.joinpath("report_files")
-    export_dir.mkdir(exist_ok=True,parents=True)
-    fig,axes = plt.subplots(1,2,figsize=(15,5))
+    export_dir.mkdir(exist_ok=True, parents=True)
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
     plot_hist_nmb_anot_per_emoji(dataset_df)
     plt.savefig(export_dir.joinpath("dataset_distribution.jpeg"))
 
-    fig,ax = plt.subplots(1, figsize=(10, 5))
-    plot_nmb_form_per_worker(dataset_df,fig=fig,ax=ax)
+    fig, ax = plt.subplots(1, figsize=(10, 5))
+    plot_nmb_form_per_worker(dataset_df, fig=fig, ax=ax)
     plt.savefig(export_dir.joinpath("form_per_worker.jpeg"))
 
     # Save most varied, most constant and sample of the datset
     np.random.seed(14)
     export_dir = EXPORT_DIR.joinpath("report_files/")
-    export_dir.mkdir(exist_ok=True,parents=True)
-    var_df,cstt_df = get_varied_cstt_results(dataset_df)
+    export_dir.mkdir(exist_ok=True, parents=True)
+    var_df, cstt_df = get_varied_cstt_results(dataset_df)
     sample_df = dataset_df.sample(15)
     worker_sample = worker_infos.sample(5)
 
-    write_to_latex(export_dir.joinpath("varied.tex"),var_df)
-    write_to_latex(export_dir.joinpath("cstt.tex"),cstt_df)
-    write_to_latex(export_dir.joinpath("sample.tex"),sample_df)
-    write_to_latex(export_dir.joinpath("worker_sample.tex"),worker_sample,index=True)
+    write_to_latex(export_dir.joinpath("varied.tex"), var_df)
+    write_to_latex(export_dir.joinpath("cstt.tex"), cstt_df)
+    write_to_latex(export_dir.joinpath("sample.tex"), sample_df)
+    write_to_latex(export_dir.joinpath("worker_sample.tex"),
+                   worker_sample, index=True)
 
-def plot_hist_nmb_anot_per_emoji(tot_df,axes=None,fig=None):
-    """
-    """
+
+def plot_hist_nmb_anot_per_emoji(tot_df, axes=None, fig=None):
+    """"""
     if axes is None or fig is None:
-        fig,axes = plt.subplots(1,2,figsize=(15,5))
+        fig, axes = plt.subplots(1, 2, figsize=(15, 5))
 
     ax = axes[0]
-    val_counts = tot_df['emoji'].value_counts()
-    val_counts.hist(ax=ax,color=COLOR1)
-    ax.set_xlabel("Number of annotations",fontsize=LABEL_SIZE)
-    ax.set_ylabel("Number of emojis",fontsize=LABEL_SIZE)
-    ax.set_title("Histogram of annotations number per emojis",fontsize=TITLE_SIZE)
+    val_counts = tot_df["emoji"].value_counts()
+    val_counts.hist(ax=ax, color=COLOR1)
+    ax.set_xlabel("Number of annotations", fontsize=LABEL_SIZE)
+    ax.set_ylabel("Number of emojis", fontsize=LABEL_SIZE)
+    ax.set_title("Histogram of annotations count per emojis", fontsize=20)
 
     ax = axes[1]
-    voc_size_per_emoji = tot_df.groupby('emoji')['word'].agg(lambda x: len(set(x)))
+    voc_size_per_emoji = tot_df.groupby(
+        "emoji")["word"].agg(lambda x: len(set(x)))
     voc_size_per_emoji = voc_size_per_emoji / val_counts
-    voc_size_per_emoji.hist(ax=ax,bins=25,color=COLOR1)
-    ax.set_xlabel('Size of vocabulary/word',fontsize=LABEL_SIZE)
-    ax.set_ylabel('Number of emojis',fontsize=LABEL_SIZE)
-    ax.set_title('Histogram of normalized vocabulary size',fontsize=TITLE_SIZE)
+    voc_size_per_emoji.hist(ax=ax, bins=25, color=COLOR1)
+    ax.set_xlabel("Size of vocabulary/annotation", fontsize=LABEL_SIZE)
+    ax.set_ylabel("Number of emojis", fontsize=LABEL_SIZE)
+    ax.set_title("Histogram of normalized vocabulary size", fontsize=20)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--input_dir", help="Input dataset directory",
-        default="/app/data/raw/forms/dataset"
+        "-i",
+        "--input_dir",
+        help="Input dataset directory",
+        default="/app/data/raw/forms/dataset",
     )
     parser.add_argument(
-        "-v", "--voc_size", help="Minimal vocabulary size ratio",type=float, default=None
+        "-v",
+        "--voc_size",
+        help="Minimal vocabulary size ratio",
+        type=float,
+        default=None,
     )
     parser.add_argument(
-        "-l", "--lshtein", help="Tolerance for the honeypots inputs in terms of Levenshtein distance",type=float, default=None
+        "-l",
+        "--lshtein",
+        help="Tolerance for the honeypots inputs in terms of Levenshtein distance",
+        type=float,
+        default=None,
     )
     parser.add_argument(
-        "-o", "--export_dir", help="Output path for the production format of the dataset",
-        default="/app/results"
+        "-o",
+        "--export_dir",
+        help="Output path for the production format of the dataset",
+        default="/app/results/data/dataset",
     )
     args = parser.parse_args()
 
@@ -333,5 +390,4 @@ if __name__ == '__main__':
     lshtein = args.lshtein
     voc_size = args.voc_size
     dataset_df = generate_dataset(input_dir, lshtein, voc_size)
-    dataset_df.to_csv(export_dir.joinpath("emoji_dataset_prod.csv"))
-
+    dataset_df.to_csv(Path(export_dir).joinpath("emoji_dataset_prod.csv"))

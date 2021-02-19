@@ -133,7 +133,8 @@ def print_det(df, ax=None, fig=None):
     if ax is None:
         fig, ax = plt.subplots(1)
     df = df.sort_values("det")
-    ax.set_title("Determinant of correlation matrix amongst crowdsourced words vectors")
+    ax.set_title(
+        "Determinant of correlation matrix amongst crowdsourced words vectors")
     df["det"].plot.bar(ax=ax, color=COLOR_PLOT)
     print("Emojis:", end="")
     for i in df.index:
@@ -216,7 +217,8 @@ def get_words_scores(form1_df, user_df, w2v, col="mean_rep"):
         lambda word: w2v.get_vector(word)
     )
 
-    words_scores_df = pd.merge(words_scores_df, user_df[col], on="em", how="inner")
+    words_scores_df = pd.merge(
+        words_scores_df, user_df[col], on="em", how="inner")
     words_scores_df["word_corr"] = words_scores_df[["wordvec", col]].apply(
         lambda x: np.corrcoef(x[0], x[1])[0, 1], axis=1
     )

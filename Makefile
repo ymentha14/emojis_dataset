@@ -32,6 +32,9 @@ start_jupy:
 dataset:
 	@python3 src/analysis/postprocessing.py -v=0.8 -l=3
 
+all_results:
+	@python3 src/main.py
+
 build_image:
 	@docker build -t emoji_dataset .
 
