@@ -37,11 +37,10 @@
 
 As emojis became a central part of digital communication in the last decades, being able to represent these emojis in an appropriate semantic space  becomes a crucial aspect in Natural Language Processing to extract the meaning of a sentence.
 
-Emojis Dataset consists of single-word descriptions of the 1325 most common emojis. This allows to represent emojis in the same feature space as word in any NLP model
+Emojis Dataset consists of single-word descriptions of the 1325 most common emojis. This allows to represent emojis in the same feature space as words in any NLP model, therefore providing crucial insights in the emotions carried by a given sentence.
 
 
-* makes use of mt2gf
-* specifications (30 etc)
+This repository makes use of [mturk2gform](https://github.com/ymentha14/mturk2gform). Refer to this page any documentation regarding pipelines synchronization.
 
 ## Dataset Specifications
 *Each annotation consists of a human describing one emoji with one word*
